@@ -141,6 +141,12 @@ class Sample_UIButton {
           //  this.scaler.enable = false;
         }
 
+        const box = new Object3D();
+        let box = (await Engine3D.res.loadGltf('https://cdn.orillusion.com/gltfs/cornellBox/cornellBox.gltf')) as Object3D;
+        box.localScale = new Vector3(10, 10, 10);
+        this.scene.addChild(box);
+        }
+
         const sphere = new Object3D();
         const sphereGeometry = new SphereGeometry(1);
         const sphereMaterial = new UnLitMaterial();

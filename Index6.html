@@ -4,9 +4,12 @@
   </title>
 </head>
 <body>
+
   <script src="https://unpkg.com/@orillusion/core@0.8.5-dev.6/dist/orillusion.umd.js"></script>
   <script>
-const { Engine3D, Object3DUtil, Object3D, AxisObject, GUISpace, WorldPanel, ViewPanel, UIButton, SphereGeometry, UnLitMaterial, MeshRenderer, UITextField, Color, TextAnchor, PointerEvent3D, UIImage, ImageType, ComponentBase, View3D, UIPanel, UIInteractiveStyle, UIButtonTransition, Scene3D, AtmosphericComponent, CameraUtil, HoverCameraController, DirectLight, KelvinUtil, PickGUIEvent3D } = Orillusion;
+const { Engine3D, Object3DUtil, Object3D, AxisObject, GUISpace, WorldPanel, ViewPanel, UIButton, SphereGeometry, LitMaterial, UnLitMaterial, MeshRenderer, UITextField, Color, TextAnchor, PointerEvent3D, UIImage, ImageType, ComponentBase, View3D, UIPanel, UIInteractiveStyle, UIButtonTransition, Scene3D, AtmosphericComponent, CameraUtil, HoverCameraController, DirectLight, KelvinUtil, PickGUIEvent3D } = Orillusion;
+
+
 
 class Sample_UIButton {
     async run() {
@@ -23,6 +26,7 @@ class Sample_UIButton {
         // init Camera3D
         let camera = CameraUtil.createCamera3DObject(this.scene);
         camera.perspective(60, Engine3D.aspect, 1, 5000);
+        
 
         // init Camera Controller
         let hoverCtrl = camera.object3D.addComponent(HoverCameraController);
@@ -52,7 +56,7 @@ class Sample_UIButton {
         // relative light to sky
         atmosphericSky.relativeTransform = light.transform;
 
-        Engine3D.startRenderView(view);
+        //Engine3D.startRenderView(view);
 
         // create floor
         let floor = Object3DUtil.GetSingleCube(100, 2, 50, 0.5, 0.5, 0.5);
@@ -60,7 +64,7 @@ class Sample_UIButton {
         floor.y = -40;
 
         // enable ui canvas at index 0
-        let canvas = view.enableUICanvas();
+       // let canvas = view.enableUICanvas();
 
         //create UI root
         let panelRoot = new Object3D();
@@ -141,15 +145,21 @@ class Sample_UIButton {
           //  this.scaler.enable = false;
         }
 
+        
+
         const sphere = new Object3D();
-        const sphereGeometry = new SphereGeometry(1);
+        sphere.x = 0;
+        sphere.y = 20;
+        sphere.z = 0; 
+        const sphereGeometry = new SphereGeometry(40);
         const sphereMaterial = new UnLitMaterial();
         sphereMaterial.baseColor = new Color(1, 0, 0) // red
         const sphereRenderer = sphere.addComponent(MeshRenderer);
         sphereRenderer.geometry = sphereGeometry;
-        sphereRenderer.material = sphereMaterial
+        sphereRenderer.material = sphereMaterial;// or adjust as needed
 
         this.scene.addChild(sphere)
+        Engine3D.startRenderView(view);
  
     }
 
@@ -192,33 +202,33 @@ class ScalerComponent extends ComponentBase {
 }
 
 (async () => {
-    const sample = new Sample_UIButton();
-    await sample.run();
+   const sample = new Sample_UIButton();
+   await sample.run();
 
-    class CylinderObject extends ComponentBase {
-        constructor(scene) {
-            super();
-            this.scene = scene;
-            //this.mesh = Object3DUtil.GetSingleCylinder(1, 1, 1, 16, 16, 0.5, 0.5, 0.5);
-            this.mesh = Object3DUtil.GetSingleCylinder(100, 100, 100, 1600, 1600, 5, 5, 5);
-            this.mesh.name = 'cylinder';
-            this.mesh.rotationX = -90;
-            this.mesh.rotationY = 0;
-            this.mesh.rotationZ = 0;
-            this.mesh.scaleX = 100;
-            this.mesh.scaleY = 10;
-            this.mesh.scaleZ = 10;
-            this.mesh.y = -50;
-            mesh.visible = true;
-            this.scene.addChild(this.mesh);
+  //  class CylinderObject extends ComponentBase {
+      //  constructor(scene) {
+      //      super();
+         //   this.scene = scene;
+        //    //this.mesh = Object3DUtil.GetSingleCylinder(1, 1, 1, 16, 16, 0.5, 0.5, 0.5);
+         //   this.mesh = Object3DUtil.GetSingleCylinder(100, 100, 100, 1600, 1600, 5, 5, 5);
+          //  this.mesh.name = 'cylinder';
+          //  this.mesh.rotationX = -90;
+          //  this.mesh.rotationY = 0;
+          //  this.mesh.rotationZ = 0;
+         //   this.mesh.scaleX = 100;
+          //  this.mesh.scaleY = 10;
+         //   this.mesh.scaleZ = 10;
+         //   this.mesh.y = -50;
+         //   mesh.visible = true;
+         //   this.scene.addChild(this.mesh);
             
-        }
-        getComponent(type) {
-            return this.mesh.getComponent(type);
-        }
-    }
+       // }
+       // getComponent(type) {
+      //      return this.mesh.getComponent(type);
+       // }
+    //}
 
-    new CylinderObject(sample.scene);
+    //new CylinderObject(sample.scene);
 })();
   </script>
 </body>
