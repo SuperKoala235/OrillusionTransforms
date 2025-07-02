@@ -53,10 +53,24 @@ class Sample {
     cylinderY2.y = CYLINDER_LENGTH / 2;
     coordinateAxis.addChild(cylinderY2);
 
-    const cylinderZ2 = this.createCylinder(new Color(1, 0, 1));
+    const cylinderZ2 = this.createCylinder(new Color(0, 0, 1));
     cylinderZ2.rotationX = 90;
     cylinderZ2.z = CYLINDER_LENGTH / 2;
     coordinateAxis.addChild(cylinderZ2);
+
+    const coneX2 = this.createCone(new Color (1,0,0))
+    coneX2.rotationZ = -90;
+    coneX2.x = CYLINDER_LENGTH + CONE_LENGTH / 2;
+    coordinateAxis.addChild(coneX2);
+
+    const coneY2 = this.createCone(new Color (0,1,0))
+    coneY2.y = CYLINDER_LENGTH + CONE_LENGTH / 2;
+    coordinateAxis.addChild(coneY2);
+
+    const coneZ2 = this.createCone(new Color (0,0,1))
+    coneZ2.rotationX = 90;
+    coneZ2.z = CYLINDER_LENGTH + CONE_LENGTH / 2;
+    coordinateAxis.addChild(coneZ2);
 
     scene.addChild(coordinateAxis);
 
@@ -65,7 +79,7 @@ class Sample {
   }
   createCylinder(color){
     const cylinder = new Object3D();
-    const geometry = new CylinderGeometry(0, 10, CYLINDER_LENGTH, 32, 1, false);
+    const geometry = new CylinderGeometry(10, 10, CYLINDER_LENGTH, 32, 1, false);
     const material = new LitMaterial();
     material.baseColor = color;
     const renderer = cylinder.addComponent(MeshRenderer);
@@ -74,7 +88,16 @@ class Sample {
 
     return cylinder;
   }
-  createCone(color, length){
+  createCone(color){
+    const cone = new Object3D();
+    const conegeometry = new CylinderGeometry(0, 10, CONE_LENGTH, 32, 1, false);
+    const conematerial = new LitMaterial();
+    conematerial.baseColor = color;
+    const conerenderer = cone.addComponent(MeshRenderer);
+    conerenderer.geometry = conegeometry;
+    conerenderer.material = conematerial;
+
+    return cone;
   }
 }
 
