@@ -3,11 +3,12 @@
 const {
   Engine3D, Scene3D, View3D, CameraUtil,
   HoverCameraController, DirectLight, KelvinUtil,
-  Object3D, SphereGeometry, CylinderGeometry, MeshRenderer, LitMaterial,
+  Object3D, SphereGeometry, CylinderGeometry, BoxGeometry, MeshRenderer, LitMaterial,
   Color, AtmosphericComponent
 } = Orillusion;
 
 const CYLINDER_LENGTH = 150; // Length of the cylinders
+const SQUARE_LENGTH = CYLINDER_LENGTH; // Length of the square transforms
 const CONE_LENGTH = CYLINDER_LENGTH / 4; // Length of the cones
 
 class Sample {
@@ -43,6 +44,7 @@ class Sample {
     sky.relativeTransform = light.transform;
 
     const coordinateAxis = new Object3D();
+    const scaleAxis = new Object3D();
 
     const cylinderX2 = this.createCylinder(new Color(1, 0, 0));
     cylinderX2.rotationZ = -90;
@@ -74,6 +76,24 @@ class Sample {
 
     scene.addChild(coordinateAxis);
 
+    const boxX2 = this.createBox(new Color(1, 0, 0));
+    boxX2.rotationZ = -90;
+    boxX2.x = SQUARE_LENGTH /2 + 200  // replace this with SQUARE_LENGTH / 2 when project is complete
+    scaleAxis.addChild(boxX2);
+
+    const boxY2 = this.createBox(new Color(0, 1, 0));
+    boxY2.y = SQUARE_LENGTH /2 ; 
+    boxY2.x = 200 // delete this when project is complete
+    scaleAxis.addChild(boxY2);
+
+    const boxZ2 = this.createBox(new Color(0, 0, 1));
+    boxZ2.z = SQUARE_LENGTH /2 ; 
+    boxZ2.x = 200; // delete this when project is complete
+    boxZ2.rotationX = 90;
+    scaleAxis.addChild(boxZ2);
+
+    scene.addChild(scaleAxis);
+
     // Start render
     Engine3D.startRenderView(view);
   }
@@ -98,6 +118,17 @@ class Sample {
     conerenderer.material = conematerial;
 
     return cone;
+  }
+  createBox(color) {
+    const box = new Object3D();
+    const boxgeometry = new BoxGeometry(20, 150,20);
+    const boxmaterial = new LitMaterial();
+    boxmaterial.baseColor = color;
+    const boxrenderer = box.addComponent(MeshRenderer);
+    boxrenderer.geometry = boxgeometry;
+    boxrenderer.material = boxmaterial;
+
+    return box;
   }
 }
 
