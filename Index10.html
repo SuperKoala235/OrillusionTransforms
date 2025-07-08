@@ -90,7 +90,7 @@ class Sample {
   }
   createCone(color){
     const cone = new Object3D();
-    const conegeometry = new CylinderGeometry(0, 10, CONE_LENGTH, 32, 1, false);
+    const conegeometry = new CylinderGeometry(0, 20, CONE_LENGTH, 32, 1, false);
     const conematerial = new LitMaterial();
     conematerial.baseColor = color;
     const conerenderer = cone.addComponent(MeshRenderer);
