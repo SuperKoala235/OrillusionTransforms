@@ -10,7 +10,7 @@ const {
 const CYLINDER_LENGTH = 150; // Length of the cylinders
 const SQUARE_LENGTH = CYLINDER_LENGTH; // Length of the square transforms
 const CONE_LENGTH = CYLINDER_LENGTH / 4; // Length of the cones
-const TORUS_LENGTH = CYLINDER_LENGTH; // Length of the torus
+const TORUS_LENGTH = CYLINDER_LENGTH/4; // Length of the torus
 
 class Sample {
   async run() {
@@ -96,12 +96,23 @@ class Sample {
 
     scene.addChild(scaleAxis);
 
+    const torusZ2 = this.createTorus(new Color(0, 0, 1));
+    torusZ2.rotationZ = -90;
+    torusZ2.x = TORUS_LENGTH/4 - 400; //avoid overlap with the cylinder
+    rotationAxis.addChild(torusZ2);
+
     const torusX2 = this.createTorus(new Color(1, 0, 0));
-    torusX2.rotationZ = -90;
-    torusX2.y = 50; // Offset to avoid overlap with the cylinder
-    torusX2.z = 50; // Offset to avoid overlap with the cylinder
-    torusX2.x = TORUS_LENGTH; 
+    torusX2.y = TORUS_LENGTH/4; 
+    torusX2.x = -400; //avoid overlap with the cylinder
     rotationAxis.addChild(torusX2);
+
+    const torusY2 = this.createTorus(new Color(0, 1, 0));
+    torusY2.z = TORUS_LENGTH/4;
+    torusY2.x = -400; //avoid overlap with the cylinder
+    torusY2.rotationX = 90;
+    rotationAxis.addChild(torusY2);
+
+    scene.addChild(rotationAxis);
 
     // Start render
     Engine3D.startRenderView(view);
@@ -141,7 +152,7 @@ class Sample {
   }
   createTorus(color) {
     const torus = new Object3D();
-    const torusgeometry = new TorusGeometry(100, 5, 32, 32);
+    const torusgeometry = new TorusGeometry(100, 5, 32, 64);
     const torusmaterial = new LitMaterial();
     torusmaterial.baseColor = color;
     const torusrenderer = torus.addComponent(MeshRenderer);
