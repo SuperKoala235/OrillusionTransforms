@@ -4,7 +4,7 @@ const {
   Engine3D, Scene3D, View3D, CameraUtil,
   HoverCameraController, DirectLight, KelvinUtil,
   Object3D, SphereGeometry, CylinderGeometry, BoxGeometry, TorusGeometry, MeshRenderer, LitMaterial,
-  Color, AtmosphericComponent
+  Color, AtmosphericComponent, BoxColliderShape, Vector3, PointerEvent3D, ColliderComponent
 } = Orillusion;
 
 const CYLINDER_LENGTH = 150; // Length of the cylinders
@@ -33,6 +33,11 @@ class Sample {
     const view = new View3D();
     view.scene = scene;
     view.camera = cameraObj;
+
+    //Pick and pick type need to be configured before the engine starts
+    Engine3D.setting.pick.enable = true;
+    // Bound: ray box picking, pixel: frame buffer picking
+    Engine3D.setting.pick.mode = `bound`; // or 'pixel'
 
     // Add light
     const lightObj = new Object3D();
@@ -125,6 +130,8 @@ class Sample {
     const renderer = cylinder.addComponent(MeshRenderer);
     renderer.geometry = geometry;
     renderer.material = material;
+    let collider = cylinder.addComponent(ColliderComponent);
+    collider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, CYLINDER_LENGTH / 2, 0), new Vector3(10, CYLINDER_LENGTH, 10));
 
     return cylinder;
   }
