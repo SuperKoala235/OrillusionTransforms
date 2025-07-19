@@ -130,8 +130,14 @@ class Sample {
     const renderer = cylinder.addComponent(MeshRenderer);
     renderer.geometry = geometry;
     renderer.material = material;
-    let collider = cylinder.addComponent(ColliderComponent);
-    collider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, CYLINDER_LENGTH / 2, 0), new Vector3(10, CYLINDER_LENGTH, 10));
+    let cylindercollider = cylinder.addComponent(ColliderComponent);
+    cylindercollider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, CYLINDER_LENGTH / 2, 10));
+    cylinder.addEventListener(PointerEvent3D.PICK_CLICK, (e) => {
+    const newColor = new Color(Math.random(), Math.random(), Math.random());
+    console.log("Cylinder clicked! New color:", newColor);
+    renderer.material.baseColorMap = null;  
+    renderer.material.baseColor = newColor;
+    });
 
     return cylinder;
   }
@@ -144,6 +150,21 @@ class Sample {
     conerenderer.geometry = conegeometry;
     conerenderer.material = conematerial;
 
+    const conecollider = cone.addComponent(ColliderComponent);
+    conecollider.shape = new BoxColliderShape().setFromCenterAndSize(
+    new Vector3(0, 0, 0),
+    new Vector3(20, CONE_LENGTH / 2, 20)
+    );
+
+    // Click interaction — change color
+    cone.addEventListener(PointerEvent3D.PICK_CLICK, (e) => {
+    const newColor = new Color(Math.random(), Math.random(), Math.random());
+    console.log("Cone clicked! New color:", newColor);
+    conerenderer.material.baseColorMap = null;  
+    conerenderer.material.baseColor = newColor;
+    });
+
+
     return cone;
   }
   createBox(color) {
@@ -154,6 +175,13 @@ class Sample {
     const boxrenderer = box.addComponent(MeshRenderer);
     boxrenderer.geometry = boxgeometry;
     boxrenderer.material = boxmaterial;
+    let boxcollider = box.addComponent(ColliderComponent);
+    boxcollider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, 75, 10));
+    box.addEventListener(PointerEvent3D.PICK_CLICK, (e) => {
+    const newColor = new Color(Math.random(), Math.random(), Math.random());
+    console.log("Box clicked! New color:", newColor);
+    boxrenderer.material.baseColor = newColor;
+    });
 
     return box;
   }
@@ -165,6 +193,20 @@ class Sample {
     const torusrenderer = torus.addComponent(MeshRenderer);
     torusrenderer.geometry = torusgeometry;
     torusrenderer.material = torusmaterial;
+
+    const toruscollider = torus.addComponent(ColliderComponent);
+    toruscollider.shape = new BoxColliderShape().setFromCenterAndSize(
+    new Vector3(0, 0, 0),             // center at origin
+    new Vector3(100, 50, 2)          // half-extents: fits the ring
+    );
+
+    // Click interaction — change color
+    torus.addEventListener(PointerEvent3D.PICK_CLICK, (e) => {
+    const newColor = new Color(Math.random(), Math.random(), Math.random());
+    console.log("Torus clicked! New color:", newColor);
+    torusrenderer.material.baseColorMap = null;
+    torusrenderer.material.baseColor = newColor;
+    });
 
     return torus;
   }
