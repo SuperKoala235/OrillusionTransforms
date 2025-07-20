@@ -123,23 +123,45 @@ class Sample {
     Engine3D.startRenderView(view);
   }
   createCylinder(color){
-    const cylinder = new Object3D();
-    const geometry = new CylinderGeometry(10, 10, CYLINDER_LENGTH, 32, 1, false);
-    const material = new LitMaterial();
-    material.baseColor = color;
-    const renderer = cylinder.addComponent(MeshRenderer);
-    renderer.geometry = geometry;
-    renderer.material = material;
-    let cylindercollider = cylinder.addComponent(ColliderComponent);
-    cylindercollider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, CYLINDER_LENGTH / 2, 10));
-    cylinder.addEventListener(PointerEvent3D.PICK_CLICK, (e) => {
-    const newColor = new Color(Math.random(), Math.random(), Math.random());
-    console.log("Cylinder clicked! New color:", newColor);
-    renderer.material.baseColorMap = null;  
-    renderer.material.baseColor = newColor;
-    });
+  const cylinder = new Object3D();
+  const geometry = new CylinderGeometry(10, 10, CYLINDER_LENGTH, 32, 1, false);
+  geometry.center = true;
+  const material = new LitMaterial();
+  material.baseColor = color.clone();
+  const renderer = cylinder.addComponent(MeshRenderer);
+  renderer.geometry = geometry;
+  renderer.material = material;
 
-    return cylinder;
+  // Store the original color for restoring
+  const originalColor = color.clone();
+
+  // Collider setup
+  const collider = cylinder.addComponent(ColliderComponent);
+  collider.shape = new BoxColliderShape().setFromCenterAndSize(
+  new Vector3(0, 0, 0),
+  new Vector3(10, CYLINDER_LENGTH / 2, 10)
+  );
+
+  // Hover in (highlight)
+  cylinder.addEventListener(PointerEvent3D.PICK_OVER, (e) => {
+  const brighter = renderer.material.baseColor.clone();
+  const brightenFactor = 0.3;
+  brighter.r = Math.min(brighter.r + brightenFactor, 1);
+  brighter.g = Math.min(brighter.g + brightenFactor, 1);
+  brighter.b = Math.min(brighter.b + brightenFactor, 1);
+  renderer.material.baseColorMap = null;
+  renderer.material.baseColor = brighter;
+  console.log("Hovered");
+  });
+
+  // Hover out (restore original)
+  cylinder.addEventListener(PointerEvent3D.PICK_OUT, (e) => {
+  renderer.material.baseColorMap = null;
+  renderer.material.baseColor = originalColor.clone();
+  console.log("Not Hovered");
+  });
+
+  return cylinder;
   }
   createCone(color){
     const cone = new Object3D();
@@ -155,15 +177,6 @@ class Sample {
     new Vector3(0, 0, 0),
     new Vector3(20, CONE_LENGTH / 2, 20)
     );
-
-    // Click interaction — change color
-    cone.addEventListener(PointerEvent3D.PICK_CLICK, (e) => {
-    const newColor = new Color(Math.random(), Math.random(), Math.random());
-    console.log("Cone clicked! New color:", newColor);
-    conerenderer.material.baseColorMap = null;  
-    conerenderer.material.baseColor = newColor;
-    });
-
 
     return cone;
   }
@@ -200,13 +213,6 @@ class Sample {
     new Vector3(100, 50, 2)          // half-extents: fits the ring
     );
 
-    // Click interaction — change color
-    torus.addEventListener(PointerEvent3D.PICK_CLICK, (e) => {
-    const newColor = new Color(Math.random(), Math.random(), Math.random());
-    console.log("Torus clicked! New color:", newColor);
-    torusrenderer.material.baseColorMap = null;
-    torusrenderer.material.baseColor = newColor;
-    });
 
     return torus;
   }
