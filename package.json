@@ -15,5 +15,11 @@
   "bugs": {
     "url": "https://github.com/SuperKoala235/OrillusionTransforms/issues"
   },
-  "homepage": "https://github.com/SuperKoala235/OrillusionTransforms#readme"
+  "homepage": "https://github.com/SuperKoala235/OrillusionTransforms#readme",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@orillusion/core": "^0.8.5-dev.9"
+  }
 }
