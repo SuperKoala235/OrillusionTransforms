@@ -46,76 +46,10 @@ class Sample {
     scene.addChild(lightObj);
     sky.relativeTransform = light.transform;
 
-    const coordinateAxis = new Object3D();
-    const scaleAxis = new Object3D();
-    const rotationAxis = new Object3D();
-
-    const cylinderX2 = this.createCylinder(new Color(1, 0, 0));
-    cylinderX2.rotationZ = -90;
-    cylinderX2.x = CYLINDER_LENGTH / 2;
-    coordinateAxis.addChild(cylinderX2);
-
-    const cylinderY2 = this.createCylinder(new Color(0, 1, 0));
-    cylinderY2.y = CYLINDER_LENGTH / 2;
-    coordinateAxis.addChild(cylinderY2);
-
-    const cylinderZ2 = this.createCylinder(new Color(0, 0, 1));
-    cylinderZ2.rotationX = 90;
-    cylinderZ2.z = CYLINDER_LENGTH / 2;
-    coordinateAxis.addChild(cylinderZ2);
-
-    const coneX2 = this.createCone(new Color (1,0,0))
-    coneX2.rotationZ = -90;
-    coneX2.x = CYLINDER_LENGTH + CONE_LENGTH / 2;
-    coordinateAxis.addChild(coneX2);
-
-    const coneY2 = this.createCone(new Color (0,1,0))
-    coneY2.y = CYLINDER_LENGTH + CONE_LENGTH / 2;
-    coordinateAxis.addChild(coneY2);
-
-    const coneZ2 = this.createCone(new Color (0,0,1))
-    coneZ2.rotationX = 90;
-    coneZ2.z = CYLINDER_LENGTH + CONE_LENGTH / 2;
-    coordinateAxis.addChild(coneZ2);
-
-    scene.addChild(coordinateAxis);
-
-    const boxX2 = this.createBox(new Color(1, 0, 0));
-    boxX2.rotationZ = -90;
-    boxX2.x = SQUARE_LENGTH /2 + 200  // replace this with SQUARE_LENGTH / 2 when project is complete
-    scaleAxis.addChild(boxX2);
-
-    const boxY2 = this.createBox(new Color(0, 1, 0));
-    boxY2.y = SQUARE_LENGTH /2 ; 
-    boxY2.x = 200 // delete this when project is complete
-    scaleAxis.addChild(boxY2);
-
-    const boxZ2 = this.createBox(new Color(0, 0, 1));
-    boxZ2.z = SQUARE_LENGTH /2 ; 
-    boxZ2.x = 200; // delete this when project is complete
-    boxZ2.rotationX = 90;
-    scaleAxis.addChild(boxZ2);
-
-    scene.addChild(scaleAxis);
-
-    const torusZ2 = this.createTorus(new Color(0, 0, 1));
-    torusZ2.rotationZ = -90;
-    torusZ2.x = TORUS_LENGTH/4 - 400; //avoid overlap with the cylinder
-    rotationAxis.addChild(torusZ2);
-
-    const torusX2 = this.createTorus(new Color(1, 0, 0));
-    torusX2.y = TORUS_LENGTH/4; 
-    torusX2.x = -400; //avoid overlap with the cylinder
-    rotationAxis.addChild(torusX2);
-
-    const torusY2 = this.createTorus(new Color(0, 1, 0));
-    torusY2.z = TORUS_LENGTH/4;
-    torusY2.x = -400; //avoid overlap with the cylinder
-    torusY2.rotationX = 90;
-    rotationAxis.addChild(torusY2);
-
-    scene.addChild(rotationAxis);
-
+    this.createTranslationControl(scene);
+    this.createRotationControl(scene);
+    this.createScaleControl(scene);
+    
     // Start render
     Engine3D.startRenderView(view);
   }
@@ -218,13 +152,93 @@ class Sample {
 
     const toruscollider = torus.addComponent(ColliderComponent);
     toruscollider.shape = new BoxColliderShape().setFromCenterAndSize(
-    new Vector3(0, 0, 0),             // center at origin
-    new Vector3(100, 50, 2)          // half-extents: fits the ring
+    new Vector3(0, 0, 0),             
+    new Vector3(100, 50, 2)          
     );
 
 
     return torus;
   }
+  createTranslationControl(scene: Scene3D) {
+    const coordinateAxes = new Object3D();
+    const cylinderX = this.createCylinder(new Color(1, 0, 0));
+    cylinderX.rotationZ = -90;
+    cylinderX.x = CYLINDER_LENGTH / 2;
+    coordinateAxes.addChild(cylinderX);
+
+    const cylinderY = this.createCylinder(new Color(0, 1, 0));
+    cylinderY.y = CYLINDER_LENGTH / 2;
+    coordinateAxes.addChild(cylinderY);
+
+    const cylinderZ = this.createCylinder(new Color(0, 0, 1));
+    cylinderZ.rotationX = 90;
+    cylinderZ.z = CYLINDER_LENGTH / 2;
+    coordinateAxes.addChild(cylinderZ);
+
+    const coneX = this.createCone(new Color (1,0,0))
+    coneX.rotationZ = -90;
+    coneX.x = CYLINDER_LENGTH + CONE_LENGTH / 2;
+    coordinateAxes.addChild(coneX);
+
+    const coneY = this.createCone(new Color (0,1,0))
+    coneY.y = CYLINDER_LENGTH + CONE_LENGTH / 2;
+    coordinateAxes.addChild(coneY);
+
+    const coneZ = this.createCone(new Color (0,0,1))
+    coneZ.rotationX = 90;
+    coneZ.z = CYLINDER_LENGTH + CONE_LENGTH / 2;
+    coordinateAxes.addChild(coneZ);
+
+    scene.addChild(coordinateAxes);
+
+    return coordinateAxes;
+  }
+
+  createRotationControl(scene: Scene3D) {
+    const rotationAxes = new Object3D();
+    const torusZ = this.createTorus(new Color(0, 0, 1));
+    torusZ.rotationZ = -90;
+    torusZ.x = TORUS_LENGTH/4 - 400; //avoid overlap with the cylinder
+    rotationAxes.addChild(torusZ);
+
+    const torusX = this.createTorus(new Color(1, 0, 0));
+    torusX.y = TORUS_LENGTH/4; 
+    torusX.x = -400; //avoid overlap with the cylinder
+    rotationAxes.addChild(torusX);
+
+    const torusY = this.createTorus(new Color(0, 1, 0));
+    torusY.z = TORUS_LENGTH/4;
+    torusY.x = -400; //avoid overlap with the cylinder
+    torusY.rotationX = 90;
+    rotationAxes.addChild(torusY);
+
+    scene.addChild(rotationAxes);
+
+    return rotationAxes;
+  }
+
+  createScaleControl(scene: Scene3D) {
+    const scaleAxes = new Object3D();
+    const boxX = this.createBox(new Color(1, 0, 0));
+    boxX.rotationZ = -90;
+    boxX.x = SQUARE_LENGTH /2 + 200  // replace this with SQUARE_LENGTH / 2 when project is complete
+    scaleAxes.addChild(boxX);
+
+    const boxY = this.createBox(new Color(0, 1, 0));
+    boxY.y = SQUARE_LENGTH /2 ; 
+    boxY.x = 200 // delete this when project is complete
+    scaleAxes.addChild(boxY);
+
+    const boxZ = this.createBox(new Color(0, 0, 1));
+    boxZ.z = SQUARE_LENGTH /2 ; 
+    boxZ.x = 200; // delete this when project is complete
+    boxZ.rotationX = 90;
+    scaleAxes.addChild(boxZ);
+
+    scene.addChild(scaleAxes);
+    return scaleAxes;
+  }
+  
 }
 
 (async () => {
