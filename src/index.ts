@@ -47,7 +47,7 @@ class Sample {
     sky.relativeTransform = light.transform;
 
     this.createTranslationControl(scene);
-    this.createRotationControl(scene);
+    const rotationControl = new RotationTransformControl(scene);
     this.createScaleControl(scene);
     
     // Start render
@@ -141,24 +141,6 @@ class Sample {
 
     return box;
   }
-  createTorus(color: Color) {
-    const torus = new Object3D();
-    const torusgeometry = new TorusGeometry(100, 5, 32, 64);
-    const torusmaterial = new LitMaterial();
-    torusmaterial.baseColor = color;
-    const torusrenderer = torus.addComponent(MeshRenderer);
-    torusrenderer.geometry = torusgeometry;
-    torusrenderer.material = torusmaterial;
-
-    const toruscollider = torus.addComponent(ColliderComponent);
-    toruscollider.shape = new BoxColliderShape().setFromCenterAndSize(
-    new Vector3(0, 0, 0),             
-    new Vector3(100, 50, 2)          
-    );
-
-
-    return torus;
-  }
   createTranslationControl(scene: Scene3D) {
     const coordinateAxes = new Object3D();
     const cylinderX = this.createCylinder(new Color(1, 0, 0));
@@ -194,28 +176,6 @@ class Sample {
     return coordinateAxes;
   }
 
-  createRotationControl(scene: Scene3D) {
-    const rotationAxes = new Object3D();
-    const torusZ = this.createTorus(new Color(0, 0, 1));
-    torusZ.rotationZ = -90;
-    torusZ.x = TORUS_LENGTH/4 - 400; //avoid overlap with the cylinder
-    rotationAxes.addChild(torusZ);
-
-    const torusX = this.createTorus(new Color(1, 0, 0));
-    torusX.y = TORUS_LENGTH/4; 
-    torusX.x = -400; //avoid overlap with the cylinder
-    rotationAxes.addChild(torusX);
-
-    const torusY = this.createTorus(new Color(0, 1, 0));
-    torusY.z = TORUS_LENGTH/4;
-    torusY.x = -400; //avoid overlap with the cylinder
-    torusY.rotationX = 90;
-    rotationAxes.addChild(torusY);
-
-    scene.addChild(rotationAxes);
-
-    return rotationAxes;
-  }
 
   createScaleControl(scene: Scene3D) {
     const scaleAxes = new Object3D();
@@ -239,6 +199,49 @@ class Sample {
     return scaleAxes;
   }
   
+}
+
+class RotationTransformControl {
+  transformObject3D: Object3D;
+
+  constructor(scene: Scene3D) {
+    const rotationAxes = new Object3D();
+    const torusZ = this.createTorus(new Color(0, 0, 1));
+    torusZ.rotationZ = -90;
+    torusZ.x = -400; //avoid overlap with the cylinder
+    rotationAxes.addChild(torusZ);
+
+    const torusX = this.createTorus(new Color(1, 0, 0));
+    torusX.x = -400; //avoid overlap with the cylinder
+    rotationAxes.addChild(torusX);
+
+    const torusY = this.createTorus(new Color(0, 1, 0));
+    torusY.x = -400; //avoid overlap with the cylinder
+    torusY.rotationX = 90;
+    rotationAxes.addChild(torusY);
+
+    scene.addChild(rotationAxes);
+    this.transformObject3D = rotationAxes;
+  }
+
+  createTorus(color: Color) {
+    const torus = new Object3D();
+    const torusgeometry = new TorusGeometry(100, 5, 32, 64);
+    const torusmaterial = new LitMaterial();
+    torusmaterial.baseColor = color;
+    const torusrenderer = torus.addComponent(MeshRenderer);
+    torusrenderer.geometry = torusgeometry;
+    torusrenderer.material = torusmaterial;
+
+    const toruscollider = torus.addComponent(ColliderComponent);
+    toruscollider.shape = new BoxColliderShape().setFromCenterAndSize(
+    new Vector3(0, 0, 0),             
+    new Vector3(100, 50, 2)          
+    );
+
+
+    return torus;
+  }
 }
 
 (async () => {
