@@ -2,7 +2,7 @@ import {
   Engine3D, Scene3D, View3D, CameraUtil,
   HoverCameraController, DirectLight, KelvinUtil,
   Object3D, CylinderGeometry, MeshRenderer, LitMaterial,
-  Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, BoxColliderShape, Vector3, BoxGeometry, TorusGeometry
+  Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, BoxColliderShape, Vector3, BoxGeometry, TorusGeometry, ComponentBase
 } from '@orillusion/core';
 const CYLINDER_LENGTH = 150; // Length of the cylinders
 const SQUARE_LENGTH = CYLINDER_LENGTH; // Length of the square transforms
@@ -46,13 +46,107 @@ class Sample {
     scene.addChild(lightObj);
     sky.relativeTransform = light.transform;
 
-    this.createTranslationControl(scene);
-    const rotationControl = new RotationTransformControl(scene);
-    this.createScaleControl(scene);
+    //this.createTranslationControl(scene);
+    const translationControlAnchor = new Object3D();
+    translationControlAnchor.rotationX = -35;
+    translationControlAnchor.addComponent(TranslationTransformControl);
+    scene.addChild(translationControlAnchor);
+    const rotationControlAnchor = new Object3D();
+    rotationControlAnchor.x = -200;
+    rotationControlAnchor.rotationX = 35;
+    rotationControlAnchor.addComponent(RotationTransformControl);
+    scene.addChild(rotationControlAnchor);
+    //this.createScaleControl(scene);
     
     // Start render
     Engine3D.startRenderView(view);
   }
+
+  createBox(color: Color) {
+    const box = new Object3D();
+    const boxgeometry = new BoxGeometry(20, 150,20);
+    const boxmaterial = new LitMaterial();
+    boxmaterial.baseColor = color;
+    const boxrenderer = box.addComponent(MeshRenderer);
+    boxrenderer.geometry = boxgeometry;
+    boxrenderer.material = boxmaterial;
+    let boxcollider = box.addComponent(ColliderComponent);
+    boxcollider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, 75, 10));
+    box.addEventListener(
+      PointerEvent3D.PICK_CLICK, 
+      () => {
+        const newColor = new Color(Math.random(), Math.random(), Math.random());
+        console.log("Box clicked! New color:", newColor);
+        boxrenderer.material.baseColor = newColor;
+      }, box
+    );
+
+    return box;
+  }
+  createScaleControl(scene: Scene3D) {
+    const scaleAxes = new Object3D();
+    const boxX = this.createBox(new Color(1, 0, 0));
+    boxX.rotationZ = -90;
+    boxX.x = SQUARE_LENGTH /2 + 200  // replace this with SQUARE_LENGTH / 2 when project is complete
+    scaleAxes.addChild(boxX);
+
+    const boxY = this.createBox(new Color(0, 1, 0));
+    boxY.y = SQUARE_LENGTH /2 ; 
+    boxY.x = 200 // delete this when project is complete
+    scaleAxes.addChild(boxY);
+
+    const boxZ = this.createBox(new Color(0, 0, 1));
+    boxZ.z = SQUARE_LENGTH /2 ; 
+    boxZ.x = 200; // delete this when project is complete
+    boxZ.rotationX = 90;
+    scaleAxes.addChild(boxZ);
+
+    scene.addChild(scaleAxes);
+    return scaleAxes;
+  }
+  
+}
+
+
+class TranslationTransformControl extends ComponentBase {
+  transformObject3D: Object3D;
+  constructor() {
+    super();
+    const coordinateAxes = new Object3D();
+    const cylinderX = this.createCylinder(new Color(1, 0, 0));
+    cylinderX.rotationZ = -90;
+    cylinderX.x = CYLINDER_LENGTH / 2;
+    coordinateAxes.addChild(cylinderX);
+
+    const cylinderY = this.createCylinder(new Color(0, 1, 0));
+    cylinderY.y = CYLINDER_LENGTH / 2;
+    coordinateAxes.addChild(cylinderY);
+
+    const cylinderZ = this.createCylinder(new Color(0, 0, 1));
+    cylinderZ.rotationX = 90;
+    cylinderZ.z = CYLINDER_LENGTH / 2;
+    coordinateAxes.addChild(cylinderZ);
+
+    const coneX = this.createCone(new Color (1,0,0))
+    coneX.rotationZ = -90;
+    coneX.x = CYLINDER_LENGTH + CONE_LENGTH / 2;
+    coordinateAxes.addChild(coneX);
+
+    const coneY = this.createCone(new Color (0,1,0))
+    coneY.y = CYLINDER_LENGTH + CONE_LENGTH / 2;
+    coordinateAxes.addChild(coneY);
+
+    const coneZ = this.createCone(new Color (0,0,1))
+    coneZ.rotationX = 90;
+    coneZ.z = CYLINDER_LENGTH + CONE_LENGTH / 2;
+    coordinateAxes.addChild(coneZ);
+
+    this.transformObject3D = coordinateAxes;
+  }
+  init(){
+    this.object3D.addChild(this.transformObject3D);
+  }
+
   createCylinder(color: Color){
   const cylinder = new Object3D();
   const geometry = new CylinderGeometry(10, 10, CYLINDER_LENGTH, 32, 1, false);
@@ -120,108 +214,30 @@ class Sample {
 
     return cone;
   }
-  createBox(color: Color) {
-    const box = new Object3D();
-    const boxgeometry = new BoxGeometry(20, 150,20);
-    const boxmaterial = new LitMaterial();
-    boxmaterial.baseColor = color;
-    const boxrenderer = box.addComponent(MeshRenderer);
-    boxrenderer.geometry = boxgeometry;
-    boxrenderer.material = boxmaterial;
-    let boxcollider = box.addComponent(ColliderComponent);
-    boxcollider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, 75, 10));
-    box.addEventListener(
-      PointerEvent3D.PICK_CLICK, 
-      () => {
-        const newColor = new Color(Math.random(), Math.random(), Math.random());
-        console.log("Box clicked! New color:", newColor);
-        boxrenderer.material.baseColor = newColor;
-      }, box
-    );
-
-    return box;
-  }
-  createTranslationControl(scene: Scene3D) {
-    const coordinateAxes = new Object3D();
-    const cylinderX = this.createCylinder(new Color(1, 0, 0));
-    cylinderX.rotationZ = -90;
-    cylinderX.x = CYLINDER_LENGTH / 2;
-    coordinateAxes.addChild(cylinderX);
-
-    const cylinderY = this.createCylinder(new Color(0, 1, 0));
-    cylinderY.y = CYLINDER_LENGTH / 2;
-    coordinateAxes.addChild(cylinderY);
-
-    const cylinderZ = this.createCylinder(new Color(0, 0, 1));
-    cylinderZ.rotationX = 90;
-    cylinderZ.z = CYLINDER_LENGTH / 2;
-    coordinateAxes.addChild(cylinderZ);
-
-    const coneX = this.createCone(new Color (1,0,0))
-    coneX.rotationZ = -90;
-    coneX.x = CYLINDER_LENGTH + CONE_LENGTH / 2;
-    coordinateAxes.addChild(coneX);
-
-    const coneY = this.createCone(new Color (0,1,0))
-    coneY.y = CYLINDER_LENGTH + CONE_LENGTH / 2;
-    coordinateAxes.addChild(coneY);
-
-    const coneZ = this.createCone(new Color (0,0,1))
-    coneZ.rotationX = 90;
-    coneZ.z = CYLINDER_LENGTH + CONE_LENGTH / 2;
-    coordinateAxes.addChild(coneZ);
-
-    scene.addChild(coordinateAxes);
-
-    return coordinateAxes;
-  }
-
-
-  createScaleControl(scene: Scene3D) {
-    const scaleAxes = new Object3D();
-    const boxX = this.createBox(new Color(1, 0, 0));
-    boxX.rotationZ = -90;
-    boxX.x = SQUARE_LENGTH /2 + 200  // replace this with SQUARE_LENGTH / 2 when project is complete
-    scaleAxes.addChild(boxX);
-
-    const boxY = this.createBox(new Color(0, 1, 0));
-    boxY.y = SQUARE_LENGTH /2 ; 
-    boxY.x = 200 // delete this when project is complete
-    scaleAxes.addChild(boxY);
-
-    const boxZ = this.createBox(new Color(0, 0, 1));
-    boxZ.z = SQUARE_LENGTH /2 ; 
-    boxZ.x = 200; // delete this when project is complete
-    boxZ.rotationX = 90;
-    scaleAxes.addChild(boxZ);
-
-    scene.addChild(scaleAxes);
-    return scaleAxes;
-  }
-  
 }
 
-class RotationTransformControl {
+class RotationTransformControl extends ComponentBase {
   transformObject3D: Object3D;
 
-  constructor(scene: Scene3D) {
+  constructor() {
+    super();
     const rotationAxes = new Object3D();
     const torusZ = this.createTorus(new Color(0, 0, 1));
     torusZ.rotationZ = -90;
-    torusZ.x = -400; //avoid overlap with the cylinder
     rotationAxes.addChild(torusZ);
 
     const torusX = this.createTorus(new Color(1, 0, 0));
-    torusX.x = -400; //avoid overlap with the cylinder
     rotationAxes.addChild(torusX);
 
     const torusY = this.createTorus(new Color(0, 1, 0));
-    torusY.x = -400; //avoid overlap with the cylinder
     torusY.rotationX = 90;
     rotationAxes.addChild(torusY);
 
-    scene.addChild(rotationAxes);
     this.transformObject3D = rotationAxes;
+  }
+
+  init(){
+    this.object3D.addChild(this.transformObject3D);
   }
 
   createTorus(color: Color) {
