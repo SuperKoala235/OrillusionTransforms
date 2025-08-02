@@ -2,7 +2,8 @@ import {
   Engine3D, Scene3D, View3D, CameraUtil,
   HoverCameraController, DirectLight, KelvinUtil,
   Object3D, CylinderGeometry, MeshRenderer, LitMaterial,
-  Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, BoxColliderShape, Vector3, BoxGeometry, TorusGeometry, ComponentBase
+  Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, BoxColliderShape, Vector3, BoxGeometry, TorusGeometry, ComponentBase,
+  scale
 } from '@orillusion/core';
 const CYLINDER_LENGTH = 150; // Length of the cylinders
 const SQUARE_LENGTH = CYLINDER_LENGTH; // Length of the square transforms
@@ -46,7 +47,8 @@ class Sample {
     scene.addChild(lightObj);
     sky.relativeTransform = light.transform;
 
-    //this.createTranslationControl(scene);
+    //Add transform controls, classes and functions later
+
     const translationControlAnchor = new Object3D();
     translationControlAnchor.rotationX = -35;
     translationControlAnchor.addComponent(TranslationTransformControl);
@@ -56,55 +58,14 @@ class Sample {
     rotationControlAnchor.rotationX = 35;
     rotationControlAnchor.addComponent(RotationTransformControl);
     scene.addChild(rotationControlAnchor);
-    //this.createScaleControl(scene);
+    const scaleControlAnchor = new Object3D();
+    scaleControlAnchor.x = 250;
+    scaleControlAnchor.addComponent(ScaleTransformControl);
+    scene.addChild(scaleControlAnchor);
     
     // Start render
     Engine3D.startRenderView(view);
   }
-
-  createBox(color: Color) {
-    const box = new Object3D();
-    const boxgeometry = new BoxGeometry(20, 150,20);
-    const boxmaterial = new LitMaterial();
-    boxmaterial.baseColor = color;
-    const boxrenderer = box.addComponent(MeshRenderer);
-    boxrenderer.geometry = boxgeometry;
-    boxrenderer.material = boxmaterial;
-    let boxcollider = box.addComponent(ColliderComponent);
-    boxcollider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, 75, 10));
-    box.addEventListener(
-      PointerEvent3D.PICK_CLICK, 
-      () => {
-        const newColor = new Color(Math.random(), Math.random(), Math.random());
-        console.log("Box clicked! New color:", newColor);
-        boxrenderer.material.baseColor = newColor;
-      }, box
-    );
-
-    return box;
-  }
-  createScaleControl(scene: Scene3D) {
-    const scaleAxes = new Object3D();
-    const boxX = this.createBox(new Color(1, 0, 0));
-    boxX.rotationZ = -90;
-    boxX.x = SQUARE_LENGTH /2 + 200  // replace this with SQUARE_LENGTH / 2 when project is complete
-    scaleAxes.addChild(boxX);
-
-    const boxY = this.createBox(new Color(0, 1, 0));
-    boxY.y = SQUARE_LENGTH /2 ; 
-    boxY.x = 200 // delete this when project is complete
-    scaleAxes.addChild(boxY);
-
-    const boxZ = this.createBox(new Color(0, 0, 1));
-    boxZ.z = SQUARE_LENGTH /2 ; 
-    boxZ.x = 200; // delete this when project is complete
-    boxZ.rotationX = 90;
-    scaleAxes.addChild(boxZ);
-
-    scene.addChild(scaleAxes);
-    return scaleAxes;
-  }
-  
 }
 
 
@@ -148,55 +109,55 @@ class TranslationTransformControl extends ComponentBase {
   }
 
   createCylinder(color: Color){
-  const cylinder = new Object3D();
-  const geometry = new CylinderGeometry(10, 10, CYLINDER_LENGTH, 32, 1, false);
-  //geometry.center = true;
-  const material = new LitMaterial();
-  material.baseColor = color.clone();
-  const renderer = cylinder.addComponent(MeshRenderer);
-  renderer.geometry = geometry;
-  renderer.material = material;
+    const cylinder = new Object3D();
+    const geometry = new CylinderGeometry(10, 10, CYLINDER_LENGTH, 32, 1, false);
+    //geometry.center = true;
+    const material = new LitMaterial();
+    material.baseColor = color.clone();
+    const renderer = cylinder.addComponent(MeshRenderer);
+    renderer.geometry = geometry;
+    renderer.material = material;
 
-  // Store the original color for restoring
-  const originalColor = color.clone();
+    // Store the original color for restoring
+    const originalColor = color.clone();
 
-  // Collider setup
-  const collider = cylinder.addComponent(ColliderComponent);
-  collider.shape = new BoxColliderShape().setFromCenterAndSize(
-  new Vector3(0, 0, 0),
-  new Vector3(10, CYLINDER_LENGTH / 2, 10)
+    // Collider setup
+    const collider = cylinder.addComponent(ColliderComponent);
+    collider.shape = new BoxColliderShape().setFromCenterAndSize(
+    new Vector3(0, 0, 0),
+    new Vector3(10, CYLINDER_LENGTH / 2, 10)
   );
 
-  // Hover in (highlight)
-  cylinder.addEventListener(
-    PointerEvent3D.PICK_OVER, 
-    () => {
-      const brighter = renderer.material.baseColor.clone();
-      const brightenFactor = 0.3;
-      brighter.r = Math.min(brighter.r + brightenFactor, 1);
-      brighter.g = Math.min(brighter.g + brightenFactor, 1);
-      brighter.b = Math.min(brighter.b + brightenFactor, 1);
-      //TODO: see if this is necessary for hover
-      //renderer.material.baseColorMap = null;
-      renderer.material.baseColor = brighter;
-      console.log("Hovered");
-    },
-    cylinder
-  );
+    // Hover in (highlight)
+    cylinder.addEventListener(
+      PointerEvent3D.PICK_OVER, 
+      () => {
+        const brighter = renderer.material.baseColor.clone();
+        const brightenFactor = 0.3;
+        brighter.r = Math.min(brighter.r + brightenFactor, 1);
+        brighter.g = Math.min(brighter.g + brightenFactor, 1);
+        brighter.b = Math.min(brighter.b + brightenFactor, 1);
+        //TODO: see if this is necessary for hover
+        //renderer.material.baseColorMap = null;
+        renderer.material.baseColor = brighter;
+        console.log("Hovered");
+      },
+      cylinder
+    );
 
-  // Hover out (restore original)
-  cylinder.addEventListener(
-    PointerEvent3D.PICK_OUT, 
-    () => {
-      //renderer.material.baseColorMap = null;
-      renderer.material.baseColor = originalColor.clone();
-      console.log("Not Hovered");
-    },
-    cylinder
-  );
+    // Hover out (restore original)
+    cylinder.addEventListener(
+      PointerEvent3D.PICK_OUT, 
+      () => {
+        //renderer.material.baseColorMap = null;
+        renderer.material.baseColor = originalColor.clone();
+        console.log("Not Hovered");
+      },
+      cylinder
+    );
 
-  return cylinder;
-  }
+    return cylinder;
+    }
   createCone(color: Color){
     const cone = new Object3D();
     const conegeometry = new CylinderGeometry(0, 20, CONE_LENGTH, 32, 1, false);
@@ -258,6 +219,57 @@ class RotationTransformControl extends ComponentBase {
 
     return torus;
   }
+}
+
+class ScaleTransformControl extends ComponentBase {
+  transformObject3D: Object3D;
+
+  constructor() {
+    super();
+    const scaleAxes = new Object3D();
+    const boxX = this.createBox(new Color(1, 0, 0));
+    boxX.rotationZ = -90;
+    boxX.x = SQUARE_LENGTH /2;
+    scaleAxes.addChild(boxX);
+
+    const boxY = this.createBox(new Color(0, 1, 0));
+    boxY.y = SQUARE_LENGTH /2 ; 
+    scaleAxes.addChild(boxY);
+
+    const boxZ = this.createBox(new Color(0, 0, 1));
+    boxZ.z = SQUARE_LENGTH /2 ; 
+    boxZ.rotationX = 90;
+    scaleAxes.addChild(boxZ);
+
+    this.transformObject3D = scaleAxes;
+  }
+
+  init() {
+    this.object3D.addChild(this.transformObject3D);
+  }
+
+  createBox(color: Color) {
+    const box = new Object3D();
+    const boxgeometry = new BoxGeometry(20, 150,20);
+    const boxmaterial = new LitMaterial();
+    boxmaterial.baseColor = color;
+    const boxrenderer = box.addComponent(MeshRenderer);
+    boxrenderer.geometry = boxgeometry;
+    boxrenderer.material = boxmaterial;
+    let boxcollider = box.addComponent(ColliderComponent);
+    boxcollider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, 75, 10));
+    box.addEventListener(
+      PointerEvent3D.PICK_CLICK, 
+      () => {
+        const newColor = new Color(Math.random(), Math.random(), Math.random());
+        console.log("Box clicked! New color:", newColor);
+        boxrenderer.material.baseColor = newColor;
+      }, box
+    );
+
+    return box;
+  }
+
 }
 
 (async () => {
