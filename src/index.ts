@@ -236,6 +236,9 @@ class RotationTransformControl extends ComponentBase {
 }
 
 class ScaleTransformControl extends ComponentBase {
+  private isDragging: boolean = false;
+  private lastX: number = 0;
+  private lastY: number = 0;
   transformObject3D: Object3D;
 
   constructor() {
@@ -282,6 +285,32 @@ class ScaleTransformControl extends ComponentBase {
         boxrenderer.material.baseColor = newColor;
       }, box
     );
+     box.addEventListener(
+      PointerEvent3D.PICK_DOWN, (event: PointerEvent3D) => {
+      this.isDragging = true;
+      this.lastX = event.mouseX;
+      this.lastY = event.mouseY;
+      
+      console.log("Drag started");
+      }, box
+
+    );
+    box.addEventListener(
+      PointerEvent3D.PICK_UP, () => {
+       if (this.isDragging) {
+        this.isDragging = false;
+        console.log("Drag ended (over object)");
+      }
+    }, box
+    );
+    box.addEventListener(
+    PointerEvent3D.PICK_OUT, () => {
+      if (this.isDragging) {
+        this.isDragging = false;
+        console.log("Drag ended (left object)");
+      }
+    }, box
+);
 
     return box;
   }
@@ -292,5 +321,3 @@ class ScaleTransformControl extends ComponentBase {
   const app = new Sample();
   await app.run();
 })();
-
-//Will Add More Interactivity
