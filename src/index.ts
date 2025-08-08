@@ -11,6 +11,7 @@ const CONE_LENGTH = CYLINDER_LENGTH / 4; // Length of the cones
 const TORUS_LENGTH = CYLINDER_LENGTH/4; // Length of the torus
 
 class Sample {
+  // Initialize the engine and set up the scene, basic camera and lighting
   async run() {
     await Engine3D.init();
 
@@ -47,24 +48,37 @@ class Sample {
     scene.addChild(lightObj);
     sky.relativeTransform = light.transform;
 
+    const controlsInit = new TransformInit(scene);
+    controlsInit.init();
+
     //Add transform controls, classes and functions later
 
+    // Start render
+    Engine3D.startRenderView(view);
+  }
+}
+
+class TransformInit extends ComponentBase {
+  scene: Scene3D;
+   constructor(scene: Scene3D) {
+    super();
+    this.scene = scene;
+  }
+  
+  init() {
     const translationControlAnchor = new Object3D();
     translationControlAnchor.rotationX = -35;
     translationControlAnchor.addComponent(TranslationTransformControl);
-    scene.addChild(translationControlAnchor);
+    this.scene.addChild(translationControlAnchor);
     const rotationControlAnchor = new Object3D();
     rotationControlAnchor.x = -200;
     rotationControlAnchor.rotationX = 35;
     rotationControlAnchor.addComponent(RotationTransformControl);
-    scene.addChild(rotationControlAnchor);
+    this.scene.addChild(rotationControlAnchor);
     const scaleControlAnchor = new Object3D();
     scaleControlAnchor.x = 250;
     scaleControlAnchor.addComponent(ScaleTransformControl);
-    scene.addChild(scaleControlAnchor);
-    
-    // Start render
-    Engine3D.startRenderView(view);
+    this.scene.addChild(scaleControlAnchor);
   }
 }
 
@@ -247,6 +261,8 @@ class ScaleTransformControl extends ComponentBase {
   init() {
     this.object3D.addChild(this.transformObject3D);
   }
+
+
 
   createBox(color: Color) {
     const box = new Object3D();
