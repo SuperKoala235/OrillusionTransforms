@@ -48,8 +48,13 @@ class Sample {
     scene.addChild(lightObj);
     sky.relativeTransform = light.transform;
 
-    const controlsInit = new TransformInit(scene);
-    controlsInit.init();
+    //const controlsInit = new TransformInit(scene);
+    //controlsInit.init();
+    const translationControlAnchor = new Object3D();
+    translationControlAnchor.rotationX = -35;
+    translationControlAnchor.x = -200;
+    translationControlAnchor.addComponent(TranslationTransformControl);
+    scene.addChild(translationControlAnchor);
 
     //Add transform controls, classes and functions later
 
@@ -82,12 +87,50 @@ class TransformInit extends ComponentBase {
   }
 }
 
-
-class TranslationTransformControl extends ComponentBase {
+class TransformControlBase extends ComponentBase {
   transformObject3D: Object3D;
+
   constructor() {
     super();
-    const coordinateAxes = new Object3D();
+    this.transformObject3D = new Object3D();
+  }
+
+  init(){
+    // this.object3D.addChild(this.transformObject3D);
+    // TODO remove these debug lines
+    (window as any).object3D = this.object3D;
+    (window as any).transformObject3D = this.transformObject3D;
+  }
+
+  public getScene(object3D: Object3D): Scene3D | undefined {
+    let currentNode = object3D;
+    while (currentNode.transform.parent) {
+      currentNode = currentNode.transform.parent.object3D;
+    }
+    if (currentNode.isScene3D) {
+      return currentNode as Scene3D;
+    }
+    return undefined;
+  }
+  onUpdate() {
+    const transformScene = this.getScene(this.transformObject3D);
+    const object3DScene = this.getScene(this.object3D);
+    //In the wrong scene
+    if (transformScene !== object3DScene) {
+      this.transformObject3D.removeFromParent();
+      if (object3DScene !== undefined) {
+        object3DScene.addChild(this.transformObject3D);
+      }
+    }
+    this.transformObject3D.transform.decomposeFromMatrix(this.object3D.transform.worldMatrix);
+  }
+}
+
+
+class TranslationTransformControl extends TransformControlBase {
+  constructor() {
+    super();
+    const coordinateAxes = this.transformObject3D;
     const cylinderX = this.createCylinder(new Color(1, 0, 0));
     cylinderX.rotationZ = -90;
     cylinderX.x = CYLINDER_LENGTH / 2;
@@ -115,11 +158,6 @@ class TranslationTransformControl extends ComponentBase {
     coneZ.rotationX = 90;
     coneZ.z = CYLINDER_LENGTH + CONE_LENGTH / 2;
     coordinateAxes.addChild(coneZ);
-
-    this.transformObject3D = coordinateAxes;
-  }
-  init(){
-    this.object3D.addChild(this.transformObject3D);
   }
 
   createCylinder(color: Color){
@@ -235,15 +273,15 @@ class RotationTransformControl extends ComponentBase {
   }
 }
 
-class ScaleTransformControl extends ComponentBase {
+// TODO make inherit from TransformComponentBase
+class ScaleTransformControl extends TransformControlBase {
   private isDragging: boolean = false;
   private lastX: number = 0;
   private lastY: number = 0;
-  transformObject3D: Object3D;
 
   constructor() {
     super();
-    const scaleAxes = new Object3D();
+    const scaleAxes = this.transformObject3D;
     const boxX = this.createBox(new Color(1, 0, 0));
     boxX.rotationZ = -90;
     boxX.x = SQUARE_LENGTH /2;
@@ -257,16 +295,25 @@ class ScaleTransformControl extends ComponentBase {
     boxZ.z = SQUARE_LENGTH /2 ; 
     boxZ.rotationX = 90;
     scaleAxes.addChild(boxZ);
-
-    this.transformObject3D = scaleAxes;
   }
 
   init() {
     this.object3D.addChild(this.transformObject3D);
   }
 
+  // TODO move this to TransformControlBase
+  handlePickDown(event: PointerEvent3D) {
+      this.isDragging = true;
+      this.lastX = event.mouseX;
+      this.lastY = event.mouseY;
+      
+      console.log("Drag started");
+  }
 
-
+  // TODO add a handler for mouse moving; if isDragging, then update lastX
+  // lastY; probably use the PICK_MOVE event. note that if isDragging is false,
+  // we don't want to do anything on PICK_MOVE (just return).
+  
   createBox(color: Color) {
     const box = new Object3D();
     const boxgeometry = new BoxGeometry(20, 150,20);
@@ -287,11 +334,7 @@ class ScaleTransformControl extends ComponentBase {
     );
      box.addEventListener(
       PointerEvent3D.PICK_DOWN, (event: PointerEvent3D) => {
-      this.isDragging = true;
-      this.lastX = event.mouseX;
-      this.lastY = event.mouseY;
-      
-      console.log("Drag started");
+        this.handlePickDown(event);
       }, box
 
     );
