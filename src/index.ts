@@ -122,7 +122,15 @@ class TransformControlBase extends ComponentBase {
         object3DScene.addChild(this.transformObject3D);
       }
     }
-    this.transformObject3D.transform.decomposeFromMatrix(this.object3D.transform.worldMatrix);
+    this.setMatrix();
+  }
+
+  private setMatrix() {
+    let [position, rotation, scale] = this.object3D.transform.worldMatrix.decompose();
+    let transform = this.transformObject3D.transform;
+    transform.localRotation = rotation;
+    transform.localPosition = position;
+    transform.localScale = scale;
   }
 }
 
