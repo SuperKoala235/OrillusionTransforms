@@ -52,9 +52,22 @@ class Sample {
     //controlsInit.init();
     const translationControlAnchor = new Object3D();
     translationControlAnchor.rotationX = -35;
-    translationControlAnchor.x = -200;
     translationControlAnchor.addComponent(TranslationTransformControl);
     scene.addChild(translationControlAnchor);
+
+    const rotationControlAnchor = new Object3D();
+    rotationControlAnchor.rotationX = 35;
+    rotationControlAnchor.x = -200;
+    rotationControlAnchor.addComponent(RotationTransformControl);
+    scene.addChild(rotationControlAnchor);
+
+    const scaleControlAnchor = new Object3D();
+    scaleControlAnchor.x = 250; 
+    scaleControlAnchor.addComponent(ScaleTransformControl);
+    scaleControlAnchor.rotationX = 50;
+    scaleControlAnchor.rotationZ = -50;
+    scaleControlAnchor.rotationY = -50;
+    scene.addChild(scaleControlAnchor);
 
     //Add transform controls, classes and functions later
 
@@ -237,12 +250,11 @@ class TranslationTransformControl extends TransformControlBase {
   }
 }
 
-class RotationTransformControl extends ComponentBase {
-  transformObject3D: Object3D;
+class RotationTransformControl extends TransformControlBase {
 
   constructor() {
     super();
-    const rotationAxes = new Object3D();
+    const rotationAxes = this.transformObject3D;
     const torusZ = this.createTorus(new Color(0, 0, 1));
     torusZ.rotationZ = -90;
     rotationAxes.addChild(torusZ);
@@ -253,12 +265,6 @@ class RotationTransformControl extends ComponentBase {
     const torusY = this.createTorus(new Color(0, 1, 0));
     torusY.rotationX = 90;
     rotationAxes.addChild(torusY);
-
-    this.transformObject3D = rotationAxes;
-  }
-
-  init(){
-    this.object3D.addChild(this.transformObject3D);
   }
 
   createTorus(color: Color) {
@@ -281,7 +287,6 @@ class RotationTransformControl extends ComponentBase {
   }
 }
 
-// TODO make inherit from TransformComponentBase
 class ScaleTransformControl extends TransformControlBase {
   private isDragging: boolean = false;
   private lastX: number = 0;
@@ -303,10 +308,6 @@ class ScaleTransformControl extends TransformControlBase {
     boxZ.z = SQUARE_LENGTH /2 ; 
     boxZ.rotationX = 90;
     scaleAxes.addChild(boxZ);
-  }
-
-  init() {
-    this.object3D.addChild(this.transformObject3D);
   }
 
   // TODO move this to TransformControlBase
