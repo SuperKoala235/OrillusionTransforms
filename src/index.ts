@@ -103,6 +103,10 @@ class TransformInit extends ComponentBase {
 class TransformControlBase extends ComponentBase {
   transformObject3D: Object3D;
 
+  public isDragging: boolean = false;
+  public lastX: number = 0;
+  public lastY: number = 0;
+
   constructor() {
     super();
     this.transformObject3D = new Object3D();
@@ -145,7 +149,55 @@ class TransformControlBase extends ComponentBase {
     transform.localPosition = position;
     transform.localScale = scale;
   }
+
+
+  public handlePickDown(event: PointerEvent3D) {
+    this.isDragging = true;
+    this.lastX = event.mouseX;
+    this.lastY = event.mouseY;
+    console.log("Drag started");
+  }
+
+  
+  public handlePickUp() {
+    if (this.isDragging) {
+      this.isDragging = false;
+      console.log("Drag ended (over object)");
+    }
+  }
+
+  
+  public handlePickOut() {
+    if (this.isDragging) {
+      this.isDragging = false;
+      console.log("Drag ended (left object)");
+    }
+  }
+
+  public handlePickMove(event: PointerEvent3D) {
+    if (!this.isDragging) return;
+
+  const deltaX = event.mouseX - this.lastX;
+  const deltaY = event.mouseY - this.lastY;
+
+  this.lastX = event.mouseX;
+  this.lastY = event.mouseY;
+
+  console.log(`Dragging... ΔX: ${deltaX}, ΔY: ${deltaY}`);
+
+  }
+
+  /** Attach shared drag listeners to any handle mesh */
+  public attachDragEvents(target: Object3D) {
+    target.addEventListener(PointerEvent3D.PICK_DOWN, (e: PointerEvent3D) => this.handlePickDown(e), target);
+    target.addEventListener(PointerEvent3D.PICK_UP, () => this.handlePickUp(), target);
+    target.addEventListener(PointerEvent3D.PICK_OUT, () => this.handlePickOut(), target);
+    target.addEventListener(PointerEvent3D.PICK_MOVE, (e: PointerEvent3D) => this.handlePickMove(e), target);
+  }
+
+
 }
+
 
 
 class TranslationTransformControl extends TransformControlBase {
@@ -228,7 +280,7 @@ class TranslationTransformControl extends TransformControlBase {
       },
       cylinder
     );
-
+    this.attachDragEvents(cylinder)
     return cylinder;
     }
   createCone(color: Color){
@@ -248,6 +300,7 @@ class TranslationTransformControl extends TransformControlBase {
 
     return cone;
   }
+  
 }
 
 class RotationTransformControl extends TransformControlBase {
@@ -288,9 +341,6 @@ class RotationTransformControl extends TransformControlBase {
 }
 
 class ScaleTransformControl extends TransformControlBase {
-  private isDragging: boolean = false;
-  private lastX: number = 0;
-  private lastY: number = 0;
 
   constructor() {
     super();
@@ -310,14 +360,6 @@ class ScaleTransformControl extends TransformControlBase {
     scaleAxes.addChild(boxZ);
   }
 
-  // TODO move this to TransformControlBase
-  handlePickDown(event: PointerEvent3D) {
-      this.isDragging = true;
-      this.lastX = event.mouseX;
-      this.lastY = event.mouseY;
-      
-      console.log("Drag started");
-  }
 
   // TODO add a handler for mouse moving; if isDragging, then update lastX
   // lastY; probably use the PICK_MOVE event. note that if isDragging is false,
@@ -341,28 +383,8 @@ class ScaleTransformControl extends TransformControlBase {
         boxrenderer.material.baseColor = newColor;
       }, box
     );
-     box.addEventListener(
-      PointerEvent3D.PICK_DOWN, (event: PointerEvent3D) => {
-        this.handlePickDown(event);
-      }, box
-
-    );
-    box.addEventListener(
-      PointerEvent3D.PICK_UP, () => {
-       if (this.isDragging) {
-        this.isDragging = false;
-        console.log("Drag ended (over object)");
-      }
-    }, box
-    );
-    box.addEventListener(
-    PointerEvent3D.PICK_OUT, () => {
-      if (this.isDragging) {
-        this.isDragging = false;
-        console.log("Drag ended (left object)");
-      }
-    }, box
-);
+    this.attachDragEvents(box);
+  
 
     return box;
   }
