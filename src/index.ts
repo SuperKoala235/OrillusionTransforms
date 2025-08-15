@@ -103,10 +103,6 @@ class TransformInit extends ComponentBase {
 class TransformControlBase extends ComponentBase {
   transformObject3D: Object3D;
 
-  public isDragging: boolean = false;
-  public lastX: number = 0;
-  public lastY: number = 0;
-
   constructor() {
     super();
     this.transformObject3D = new Object3D();
@@ -149,7 +145,14 @@ class TransformControlBase extends ComponentBase {
     transform.localPosition = position;
     transform.localScale = scale;
   }
+}
 
+class MouseEventHandler extends ComponentBase {
+  public isDragging: boolean = false;
+  public lastX: number = 0;
+  public lastY: number = 0;
+  public originalColor: Color = new Color(0, 0, 0, 1);
+  public axis?: 'x' | 'y' | 'z';
 
   public handlePickDown(event: PointerEvent3D) {
     this.isDragging = true;
@@ -158,20 +161,37 @@ class TransformControlBase extends ComponentBase {
     console.log("Drag started");
   }
 
-  
   public handlePickUp() {
     if (this.isDragging) {
       this.isDragging = false;
-      console.log("Drag ended (over object)");
+      console.log("Drag ended (mouse up object)");
     }
   }
-
   
   public handlePickOut() {
     if (this.isDragging) {
       this.isDragging = false;
       console.log("Drag ended (left object)");
     }
+    this.object3D.getComponentsInChild(MeshRenderer).forEach((renderer: MeshRenderer) => {
+      renderer.material.baseColor = this.originalColor.clone();
+      console.log("Not Hovered");
+
+    });
+  }
+
+  public handlePickOver() {
+    console.log(`Hovered object ${this.object3D.name}`);
+    this.object3D.getComponentsInChild(MeshRenderer).forEach((renderer: MeshRenderer) => {
+      const brighter = renderer.material.baseColor.clone();
+      const brightenFactor = 0.3;
+      brighter.r = Math.min(brighter.r + brightenFactor, 1);
+      brighter.g = Math.min(brighter.g + brightenFactor, 1);
+      brighter.b = Math.min(brighter.b + brightenFactor, 1);
+      // Store the original color so we can restore on pick out
+      this.originalColor = renderer.material.baseColor.clone();
+      renderer.material.baseColor = brighter;
+    })
   }
 
   public handlePickMove(event: PointerEvent3D) {
@@ -184,36 +204,50 @@ class TransformControlBase extends ComponentBase {
     this.lastY = event.mouseY;
 
     console.log(`Dragging... ΔX: ${deltaX}, ΔY: ${deltaY}`);
-
   }
 
   /** Attach shared drag listeners to any handle mesh */
-  public attachDragEvents(target: Object3D) {
+  init() {
+    const target = this.object3D;
     target.addEventListener(PointerEvent3D.PICK_DOWN, (e: PointerEvent3D) => this.handlePickDown(e), target);
     target.addEventListener(PointerEvent3D.PICK_UP, () => this.handlePickUp(), target);
     target.addEventListener(PointerEvent3D.PICK_OUT, () => this.handlePickOut(), target);
     target.addEventListener(PointerEvent3D.PICK_MOVE, (e: PointerEvent3D) => this.handlePickMove(e), target);
+    target.addEventListener(PointerEvent3D.PICK_OVER, () => this.handlePickOver(), target);
   }
 }
 
+class ScaleMouseEventHandler extends MouseEventHandler {
+  handlePickDown(e: PointerEvent3D) {
+    // Call MouseEventHandler.handlePickDown() to handle the shared behavior
+    super.handlePickDown(e);
 
+    const newColor = new Color(Math.random(), Math.random(), Math.random());
+    console.log("Box clicked! New color:", newColor);
+    const boxrenderer = this.object3D.getComponent(MeshRenderer);
+    this.originalColor = newColor.clone();
+    boxrenderer.material.baseColor = newColor;
+  }
+}
 
 class TranslationTransformControl extends TransformControlBase {
   constructor() {
     super();
     const coordinateAxes = this.transformObject3D;
 
-    const arrowX = this.createArrow(new Color(1, 0, 0));
+    const arrowX = this.createArrow(new Color(1, 0, 0), 'x');
+    arrowX.rotationZ = -90; // Rotate to align with X axis
     coordinateAxes.addChild(arrowX);
-    arrowX.rotationZ = -90;
-    const arrowY = this.createArrow(new Color (0, 1, 0));
+    const arrowY = this.createArrow(new Color (0, 1, 0), 'y');
     coordinateAxes.addChild(arrowY);
-    const arrowZ = this.createArrow(new Color (0, 0, 1));
+    const arrowZ = this.createArrow(new Color (0, 0, 1), 'z');
     coordinateAxes.addChild(arrowZ);
-    arrowZ.rotationX = 90;
+    arrowZ.rotationX = 90; // Rotate to align with Z axis
   }
-  createArrow(color: Color) {
+  createArrow(color: Color, axisName: 'x' | 'y' | 'z') {
     const arrow = new Object3D();
+    arrow.name = `Arrow-${axisName}`;
+
     const cylinder = this.createCylinder(color);
     cylinder.y = CYLINDER_LENGTH / 2;
     arrow.addChild(cylinder);
@@ -221,6 +255,16 @@ class TranslationTransformControl extends TransformControlBase {
     const cone = this.createCone(color)
     cone.y = CYLINDER_LENGTH + CONE_LENGTH / 2;
     arrow.addChild(cone);
+
+    const collider = arrow.addComponent(ColliderComponent);
+    collider.shape = new BoxColliderShape().setFromCenterAndSize(
+      new Vector3(0, CYLINDER_LENGTH / 2 + CONE_LENGTH / 2, 0),
+      new Vector3(40, CYLINDER_LENGTH + CONE_LENGTH, 40)
+    );
+
+    const mouseEventHandler = arrow.addComponent(MouseEventHandler);
+    mouseEventHandler.axis = axisName;
+
     return arrow;
   }
   createCylinder(color: Color){
@@ -233,44 +277,6 @@ class TranslationTransformControl extends TransformControlBase {
     renderer.geometry = geometry;
     renderer.material = material;
 
-    // Store the original color for restoring
-    const originalColor = color.clone();
-
-    // Collider setup
-    const collider = cylinder.addComponent(ColliderComponent);
-    collider.shape = new BoxColliderShape().setFromCenterAndSize(
-      new Vector3(0, 0, 0),
-      new Vector3(10, CYLINDER_LENGTH / 2, 10)
-    );
-
-    // Hover in (highlight)
-    cylinder.addEventListener(
-      PointerEvent3D.PICK_OVER, 
-      () => {
-        const brighter = renderer.material.baseColor.clone();
-        const brightenFactor = 0.3;
-        brighter.r = Math.min(brighter.r + brightenFactor, 1);
-        brighter.g = Math.min(brighter.g + brightenFactor, 1);
-        brighter.b = Math.min(brighter.b + brightenFactor, 1);
-        //TODO: see if this is necessary for hover
-        //renderer.material.baseColorMap = null;
-        renderer.material.baseColor = brighter;
-        console.log("Hovered");
-      },
-      cylinder
-    );
-
-    // Hover out (restore original)
-    cylinder.addEventListener(
-      PointerEvent3D.PICK_OUT, 
-      () => {
-        //renderer.material.baseColorMap = null;
-        renderer.material.baseColor = originalColor.clone();
-        console.log("Not Hovered");
-      },
-      cylinder
-    );
-    this.attachDragEvents(cylinder)
     return cylinder;
   }
 
@@ -351,10 +357,7 @@ class ScaleTransformControl extends TransformControlBase {
   }
 
 
-  // TODO add a handler for mouse moving; if isDragging, then update lastX
-  // lastY; probably use the PICK_MOVE event. note that if isDragging is false,
-  // we don't want to do anything on PICK_MOVE (just return).
-  
+
   createBox(color: Color) {
     const box = new Object3D();
     const boxgeometry = new BoxGeometry(20, 150,20);
@@ -368,14 +371,10 @@ class ScaleTransformControl extends TransformControlBase {
     box.addEventListener(
       PointerEvent3D.PICK_CLICK, 
       () => {
-        const newColor = new Color(Math.random(), Math.random(), Math.random());
-        console.log("Box clicked! New color:", newColor);
-        boxrenderer.material.baseColor = newColor;
       }, box
     );
-    this.attachDragEvents(box);
+    box.addComponent(ScaleMouseEventHandler);
   
-
     return box;
   }
 
