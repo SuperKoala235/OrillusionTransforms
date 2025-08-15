@@ -194,8 +194,6 @@ class TransformControlBase extends ComponentBase {
     target.addEventListener(PointerEvent3D.PICK_OUT, () => this.handlePickOut(), target);
     target.addEventListener(PointerEvent3D.PICK_MOVE, (e: PointerEvent3D) => this.handlePickMove(e), target);
   }
-
-
 }
 
 
@@ -204,35 +202,27 @@ class TranslationTransformControl extends TransformControlBase {
   constructor() {
     super();
     const coordinateAxes = this.transformObject3D;
-    const cylinderX = this.createCylinder(new Color(1, 0, 0));
-    cylinderX.rotationZ = -90;
-    cylinderX.x = CYLINDER_LENGTH / 2;
-    coordinateAxes.addChild(cylinderX);
 
-    const cylinderY = this.createCylinder(new Color(0, 1, 0));
-    cylinderY.y = CYLINDER_LENGTH / 2;
-    coordinateAxes.addChild(cylinderY);
-
-    const cylinderZ = this.createCylinder(new Color(0, 0, 1));
-    cylinderZ.rotationX = 90;
-    cylinderZ.z = CYLINDER_LENGTH / 2;
-    coordinateAxes.addChild(cylinderZ);
-
-    const coneX = this.createCone(new Color (1,0,0))
-    coneX.rotationZ = -90;
-    coneX.x = CYLINDER_LENGTH + CONE_LENGTH / 2;
-    coordinateAxes.addChild(coneX);
-
-    const coneY = this.createCone(new Color (0,1,0))
-    coneY.y = CYLINDER_LENGTH + CONE_LENGTH / 2;
-    coordinateAxes.addChild(coneY);
-
-    const coneZ = this.createCone(new Color (0,0,1))
-    coneZ.rotationX = 90;
-    coneZ.z = CYLINDER_LENGTH + CONE_LENGTH / 2;
-    coordinateAxes.addChild(coneZ);
+    const arrowX = this.createArrow(new Color(1, 0, 0));
+    coordinateAxes.addChild(arrowX);
+    arrowX.rotationZ = -90;
+    const arrowY = this.createArrow(new Color (0, 1, 0));
+    coordinateAxes.addChild(arrowY);
+    const arrowZ = this.createArrow(new Color (0, 0, 1));
+    coordinateAxes.addChild(arrowZ);
+    arrowZ.rotationX = 90;
   }
+  createArrow(color: Color) {
+    const arrow = new Object3D();
+    const cylinder = this.createCylinder(color);
+    cylinder.y = CYLINDER_LENGTH / 2;
+    arrow.addChild(cylinder);
 
+    const cone = this.createCone(color)
+    cone.y = CYLINDER_LENGTH + CONE_LENGTH / 2;
+    arrow.addChild(cone);
+    return arrow;
+  }
   createCylinder(color: Color){
     const cylinder = new Object3D();
     const geometry = new CylinderGeometry(10, 10, CYLINDER_LENGTH, 32, 1, false);
@@ -249,9 +239,9 @@ class TranslationTransformControl extends TransformControlBase {
     // Collider setup
     const collider = cylinder.addComponent(ColliderComponent);
     collider.shape = new BoxColliderShape().setFromCenterAndSize(
-    new Vector3(0, 0, 0),
-    new Vector3(10, CYLINDER_LENGTH / 2, 10)
-  );
+      new Vector3(0, 0, 0),
+      new Vector3(10, CYLINDER_LENGTH / 2, 10)
+    );
 
     // Hover in (highlight)
     cylinder.addEventListener(
@@ -282,7 +272,8 @@ class TranslationTransformControl extends TransformControlBase {
     );
     this.attachDragEvents(cylinder)
     return cylinder;
-    }
+  }
+
   createCone(color: Color){
     const cone = new Object3D();
     const conegeometry = new CylinderGeometry(0, 20, CONE_LENGTH, 32, 1, false);
@@ -300,7 +291,6 @@ class TranslationTransformControl extends TransformControlBase {
 
     return cone;
   }
-  
 }
 
 class RotationTransformControl extends TransformControlBase {
