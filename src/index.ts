@@ -177,13 +177,13 @@ class TransformControlBase extends ComponentBase {
   public handlePickMove(event: PointerEvent3D) {
     if (!this.isDragging) return;
 
-  const deltaX = event.mouseX - this.lastX;
-  const deltaY = event.mouseY - this.lastY;
+    const deltaX = event.mouseX - this.lastX;
+    const deltaY = event.mouseY - this.lastY;
 
-  this.lastX = event.mouseX;
-  this.lastY = event.mouseY;
+    this.lastX = event.mouseX;
+    this.lastY = event.mouseY;
 
-  console.log(`Dragging... ΔX: ${deltaX}, ΔY: ${deltaY}`);
+    console.log(`Dragging... ΔX: ${deltaX}, ΔY: ${deltaY}`);
 
   }
 
