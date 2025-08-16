@@ -4,7 +4,8 @@ import {
   Object3D, CylinderGeometry, MeshRenderer, LitMaterial,
   Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, 
   BoxColliderShape, Vector3, BoxGeometry, TorusGeometry, ComponentBase, 
-  scale, SphereColliderShape, MeshColliderShape
+  scale, SphereColliderShape, MeshColliderShape,
+  GeometryBase
 } from '@orillusion/core';
 const CYLINDER_LENGTH = 150; // Length of the cylinders
 const SQUARE_LENGTH = CYLINDER_LENGTH; // Length of the square transforms
@@ -360,7 +361,7 @@ class RotationTransformControl extends TransformControlBase {
     torusrenderer.material = torusmaterial;
 
     let collider = torus.addComponent(ColliderComponent);
-    collider.shape = new MeshColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, 75, 10));
+    collider.shape = new MeshColliderShape();
 
     torus.addComponent(RotationMouseEventHandler);
 
