@@ -4,7 +4,7 @@ import {
   Object3D, CylinderGeometry, MeshRenderer, LitMaterial,
   Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, 
   BoxColliderShape, Vector3, BoxGeometry, TorusGeometry, ComponentBase, 
-  scale, SphereColliderShape
+  scale, SphereColliderShape, MeshColliderShape
 } from '@orillusion/core';
 const CYLINDER_LENGTH = 150; // Length of the cylinders
 const SQUARE_LENGTH = CYLINDER_LENGTH; // Length of the square transforms
@@ -244,8 +244,12 @@ class TranslationMouseEventHandler extends MouseEventHandler {
 }
 
 class RotationMouseEventHandler extends MouseEventHandler {
-  // TODO: Add proper collisions for the Rotation Control
+  handlePickDown(e: PointerEvent3D) {
+    super.handlePickDown(e);
+  }
+    
 }
+
 
 class ScaleMouseEventHandler extends MouseEventHandler {
   handlePickDown(e: PointerEvent3D) {
@@ -355,12 +359,10 @@ class RotationTransformControl extends TransformControlBase {
     torusrenderer.geometry = torusgeometry;
     torusrenderer.material = torusmaterial;
 
-    const toruscollider = torus.addComponent(ColliderComponent);
-    toruscollider.shape = new BoxColliderShape().setFromCenterAndSize(
-    new Vector3(0, 0, 0),             
-    new Vector3(100, 50, 2)          
-    );
+    let collider = torus.addComponent(ColliderComponent);
+    collider.shape = new MeshColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, 75, 10));
 
+    torus.addComponent(RotationMouseEventHandler);
 
     return torus;
   }
@@ -398,11 +400,7 @@ class ScaleTransformControl extends TransformControlBase {
     boxrenderer.material = boxmaterial;
     let boxcollider = box.addComponent(ColliderComponent);
     boxcollider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, 75, 10));
-    box.addEventListener(
-      PointerEvent3D.PICK_CLICK, 
-      () => {
-      }, box
-    );
+  
     box.addComponent(ScaleMouseEventHandler);
   
     return box;
