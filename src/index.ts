@@ -2,8 +2,9 @@ import {
   Engine3D, Scene3D, View3D, CameraUtil,
   HoverCameraController, DirectLight, KelvinUtil,
   Object3D, CylinderGeometry, MeshRenderer, LitMaterial,
-  Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, BoxColliderShape, Vector3, BoxGeometry, TorusGeometry, ComponentBase,
-  scale
+  Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, 
+  BoxColliderShape, Vector3, BoxGeometry, TorusGeometry, ComponentBase, 
+  scale, SphereColliderShape
 } from '@orillusion/core';
 const CYLINDER_LENGTH = 150; // Length of the cylinders
 const SQUARE_LENGTH = CYLINDER_LENGTH; // Length of the square transforms
@@ -217,6 +218,35 @@ class MouseEventHandler extends ComponentBase {
   }
 }
 
+
+class TranslationMouseEventHandler extends MouseEventHandler {
+  handlePickDown(e: PointerEvent3D) {
+    // Call MouseEventHandler.handlePickDown() to handle the shared behavior
+    super.handlePickDown(e);
+
+    const newShape = new BoxGeometry(
+    Math.floor(Math.random() * 50) + 1,
+    Math.floor(Math.random() * 50) + 1,
+    Math.floor(Math.random() * 50) + 1
+    );
+
+    const shapeObject = new Object3D();
+    const shapeRenderer = shapeObject.addComponent(MeshRenderer);
+    shapeRenderer.geometry = newShape;
+    shapeRenderer.material = new LitMaterial();
+
+    shapeObject.y = (Math.random() *500);
+    shapeObject.z = (Math.random() *-500);
+
+    console.log("Arrow Clicked clicked! New shape:", newShape);
+    this.object3D.addChild(shapeObject);
+  }
+}
+
+class RotationMouseEventHandler extends MouseEventHandler {
+  // TODO: Add proper collisions for the Rotation Control
+}
+
 class ScaleMouseEventHandler extends MouseEventHandler {
   handlePickDown(e: PointerEvent3D) {
     // Call MouseEventHandler.handlePickDown() to handle the shared behavior
@@ -262,7 +292,7 @@ class TranslationTransformControl extends TransformControlBase {
       new Vector3(40, CYLINDER_LENGTH + CONE_LENGTH, 40)
     );
 
-    const mouseEventHandler = arrow.addComponent(MouseEventHandler);
+    const mouseEventHandler = arrow.addComponent(TranslationMouseEventHandler);
     mouseEventHandler.axis = axisName;
 
     return arrow;
