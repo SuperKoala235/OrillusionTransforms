@@ -102,12 +102,18 @@ class TransformInit extends ComponentBase {
   }
 }
 
+class TransformControlReference extends ComponentBase {
+  reference?: TransformControlBase;
+}
+
 class TransformControlBase extends ComponentBase {
   transformObject3D: Object3D;
 
   constructor() {
     super();
     this.transformObject3D = new Object3D();
+    const reference = this.transformObject3D.addComponent(TransformControlReference)
+    reference.reference = this;
   }
 
   init(){
@@ -155,6 +161,17 @@ class MouseEventHandler extends ComponentBase {
   public lastY: number = 0;
   public originalColor: Color = new Color(0, 0, 0, 1);
   public axis?: 'x' | 'y' | 'z';
+  public deltaX: number = 0;
+  public deltaY: number = 0;
+
+  public getTarget(){
+    return this.object3D               //individual axis
+      .parentObject                            //entire transform control
+      .getComponent(TransformControlReference) //Reference to TransformControlBase
+      ?.reference                              //TransformControlBase object
+      ?.object3D                               //Anchor (The thing we want to transform)
+      ;
+  }
 
   public handlePickDown(event: PointerEvent3D) {
     this.isDragging = true;
@@ -199,13 +216,15 @@ class MouseEventHandler extends ComponentBase {
   public handlePickMove(event: PointerEvent3D) {
     if (!this.isDragging) return;
 
-    const deltaX = event.mouseX - this.lastX;
-    const deltaY = event.mouseY - this.lastY;
+    this.deltaX = event.mouseX - this.lastX;
+    this.deltaY = event.mouseY - this.lastY;
 
     this.lastX = event.mouseX;
     this.lastY = event.mouseY;
 
-    console.log(`Dragging... ΔX: ${deltaX}, ΔY: ${deltaY}`);
+
+
+    console.log(`Dragging... ΔX: ${this.deltaX}, ΔY: ${this.deltaY}`);
   }
 
   /** Attach shared drag listeners to any handle mesh */
@@ -224,6 +243,7 @@ class TranslationMouseEventHandler extends MouseEventHandler {
   handlePickDown(e: PointerEvent3D) {
     // Call MouseEventHandler.handlePickDown() to handle the shared behavior
     super.handlePickDown(e);
+    
 
     const newShape = new BoxGeometry(
     Math.floor(Math.random() * 50) + 1,
@@ -241,6 +261,20 @@ class TranslationMouseEventHandler extends MouseEventHandler {
 
     console.log("Arrow Clicked clicked! New shape:", newShape);
     this.object3D.addChild(shapeObject);
+  }
+
+  handlePickMove(e: PointerEvent3D) {
+    super.handlePickMove(e);
+
+    if (!this.isDragging) return;
+
+    
+    const target = this.getTarget();
+    if (target && this.axis){
+      if (this.axis === 'x') {
+        target.x = target.x+1
+      }
+    } 
   }
 }
 
