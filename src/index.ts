@@ -165,7 +165,7 @@ class MouseEventHandler extends ComponentBase {
   public deltaY: number = 0;
 
   public getTarget(){
-    return this.object3D               //individual axis
+    return this.object3D                       //individual axis
       .parentObject                            //entire transform control
       .getComponent(TransformControlReference) //Reference to TransformControlBase
       ?.reference                              //TransformControlBase object
@@ -312,18 +312,16 @@ class ScaleMouseEventHandler extends MouseEventHandler {
 
     
     const target = this.getTarget();
-    if (target && this.axis){
-      if (this.axis === 'x') {
-        target.x = target.x+1
-      }
-      else if (this.axis === 'y') {
-        target.y = target.y+1;
-      } else if (this.axis === 'z') {
-        target.z = target.z+1;
-      }
-    } 
+    if (target) {
+      const delta = 0.05; // scaling increment per movement
+      target.transform.scaleX += delta;
+      target.transform.scaleY += delta;
+      target.transform.scaleZ += delta;
+    }
+
   }
 }
+  
 
 class TranslationTransformControl extends TransformControlBase {
   constructor() {
