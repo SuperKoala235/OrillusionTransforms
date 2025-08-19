@@ -244,23 +244,26 @@ class TranslationMouseEventHandler extends MouseEventHandler {
     // Call MouseEventHandler.handlePickDown() to handle the shared behavior
     super.handlePickDown(e);
     
+    
+    if (e.ctrlKey) {
+      const newShape = new BoxGeometry(
+      Math.floor(Math.random() * 50) + 1,
+      Math.floor(Math.random() * 50) + 1,
+      Math.floor(Math.random() * 50) + 1
+      );
 
-    const newShape = new BoxGeometry(
-    Math.floor(Math.random() * 50) + 1,
-    Math.floor(Math.random() * 50) + 1,
-    Math.floor(Math.random() * 50) + 1
-    );
+      const shapeObject = new Object3D();
+      const shapeRenderer = shapeObject.addComponent(MeshRenderer);
+      shapeRenderer.geometry = newShape;
+      shapeRenderer.material = new LitMaterial();
 
-    const shapeObject = new Object3D();
-    const shapeRenderer = shapeObject.addComponent(MeshRenderer);
-    shapeRenderer.geometry = newShape;
-    shapeRenderer.material = new LitMaterial();
+      shapeObject.y = (Math.random() *500);
+      shapeObject.z = (Math.random() *-500);
 
-    shapeObject.y = (Math.random() *500);
-    shapeObject.z = (Math.random() *-500);
-
-    console.log("Arrow Clicked clicked! New shape:", newShape);
-    this.object3D.addChild(shapeObject);
+      console.log("Arrow Clicked clicked! New shape:", newShape);
+      this.object3D.addChild(shapeObject);
+    }
+    
   }
 
   handlePickMove(e: PointerEvent3D) {
@@ -273,6 +276,11 @@ class TranslationMouseEventHandler extends MouseEventHandler {
     if (target && this.axis){
       if (this.axis === 'x') {
         target.x = target.x+1
+      }
+      else if (this.axis === 'y') {
+        target.y = target.y+1;
+      } else if (this.axis === 'z') {
+        target.z = target.z+1;
       }
     } 
   }
@@ -296,6 +304,24 @@ class ScaleMouseEventHandler extends MouseEventHandler {
     const boxrenderer = this.object3D.getComponent(MeshRenderer);
     this.originalColor = newColor.clone();
     boxrenderer.material.baseColor = newColor;
+  }
+  handlePickMove(e: PointerEvent3D) {
+    super.handlePickMove(e);
+
+    if (!this.isDragging) return;
+
+    
+    const target = this.getTarget();
+    if (target && this.axis){
+      if (this.axis === 'x') {
+        target.x = target.x+1
+      }
+      else if (this.axis === 'y') {
+        target.y = target.y+1;
+      } else if (this.axis === 'z') {
+        target.z = target.z+1;
+      }
+    } 
   }
 }
 
@@ -408,16 +434,16 @@ class ScaleTransformControl extends TransformControlBase {
   constructor() {
     super();
     const scaleAxes = this.transformObject3D;
-    const boxX = this.createBox(new Color(1, 0, 0));
+    const boxX = this.createBox(new Color(1, 0, 0), 'x');
     boxX.rotationZ = -90;
     boxX.x = SQUARE_LENGTH /2;
     scaleAxes.addChild(boxX);
 
-    const boxY = this.createBox(new Color(0, 1, 0));
+    const boxY = this.createBox(new Color(0, 1, 0), 'y');
     boxY.y = SQUARE_LENGTH /2 ; 
     scaleAxes.addChild(boxY);
 
-    const boxZ = this.createBox(new Color(0, 0, 1));
+    const boxZ = this.createBox(new Color(0, 0, 1), 'z');
     boxZ.z = SQUARE_LENGTH /2 ; 
     boxZ.rotationX = 90;
     scaleAxes.addChild(boxZ);
@@ -425,7 +451,7 @@ class ScaleTransformControl extends TransformControlBase {
 
 
 
-  createBox(color: Color) {
+  createBox(color: Color, axisName: 'x' | 'y' | 'z'){
     const box = new Object3D();
     const boxgeometry = new BoxGeometry(20, 150,20);
     const boxmaterial = new LitMaterial();
@@ -436,7 +462,8 @@ class ScaleTransformControl extends TransformControlBase {
     let boxcollider = box.addComponent(ColliderComponent);
     boxcollider.shape = new BoxColliderShape().setFromCenterAndSize(new Vector3(0, 0, 0),new Vector3(10, 75, 10));
   
-    box.addComponent(ScaleMouseEventHandler);
+    const mouseEventHandler = box.addComponent(ScaleMouseEventHandler);
+    mouseEventHandler.axis = axisName;
   
     return box;
   }
