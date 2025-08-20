@@ -27,8 +27,9 @@ class Sample {
     // Create camera
     const cameraObj = CameraUtil.createCamera3DObject(scene);
     cameraObj.perspective(60, Engine3D.aspect, 0.1, 1000);
-    const camCtrl = cameraObj.object3D.addComponent(HoverCameraController);
-    camCtrl.setCamera(0, 0, 100); // look at origin from z = 100
+    //const camCtrl = cameraObj.object3D.addComponent(HoverCameraController);
+    //camCtrl.setCamera(0, 0, 100); // look at origin from z = 100
+    cameraObj.transform.localPosition = new Vector3(0, 100, -200);
 
     // Create View3D
     const view = new View3D();
@@ -78,29 +79,6 @@ class Sample {
   }
 }
 
-class TransformInit extends ComponentBase {
-  scene: Scene3D;
-   constructor(scene: Scene3D) {
-    super();
-    this.scene = scene;
-  }
-  
-  init() {
-    const translationControlAnchor = new Object3D();
-    translationControlAnchor.rotationX = -35;
-    translationControlAnchor.addComponent(TranslationTransformControl);
-    this.scene.addChild(translationControlAnchor);
-    const rotationControlAnchor = new Object3D();
-    rotationControlAnchor.x = -200;
-    rotationControlAnchor.rotationX = 35;
-    rotationControlAnchor.addComponent(RotationTransformControl);
-    this.scene.addChild(rotationControlAnchor);
-    const scaleControlAnchor = new Object3D();
-    scaleControlAnchor.x = 250;
-    scaleControlAnchor.addComponent(ScaleTransformControl);
-    this.scene.addChild(scaleControlAnchor);
-  }
-}
 
 class TransformControlReference extends ComponentBase {
   reference?: TransformControlBase;
@@ -151,7 +129,7 @@ class TransformControlBase extends ComponentBase {
     let transform = this.transformObject3D.transform;
     transform.localRotation = rotation;
     transform.localPosition = position;
-    transform.localScale = scale;
+    //transform.localScale = scale;
   }
 }
 
@@ -163,6 +141,8 @@ class MouseEventHandler extends ComponentBase {
   public axis?: 'x' | 'y' | 'z';
   public deltaX: number = 0;
   public deltaY: number = 0;
+  public deltaWorldPosition?: Vector3;
+  public lastWorldPosition?: Vector3; 
 
   public getTarget(){
     return this.object3D                       //individual axis
@@ -222,9 +202,18 @@ class MouseEventHandler extends ComponentBase {
     this.lastX = event.mouseX;
     this.lastY = event.mouseY;
 
+    //store the difference between the current 3d world position and the last one (similar to what we do for deltaX and deltaY)
+    
 
+    if (this.lastWorldPosition !== undefined) {
+      //console.log('Setting this.deltaWorldPosition from this.lastWorldPosition:', this.lastWorldPosition);
+      this.deltaWorldPosition = event.data.worldPos.clone().subtract(this.lastWorldPosition);
+    }
 
-    console.log(`Dragging... ΔX: ${this.deltaX}, ΔY: ${this.deltaY}`);
+    this.lastWorldPosition = event.data.worldPos.clone();
+    //console.log(`Dragging... ΔX: ${this.deltaX}, ΔY: ${this.deltaY}`);
+    //console.log(`World Position: ${event.data.worldPos.x}, ${event.data.worldPos.y}, ${event.data.worldPos.z}`);
+    //console.log(`Delta World Position: ${this.deltaWorldPosition}`);
   }
 
   /** Attach shared drag listeners to any handle mesh */
@@ -271,16 +260,23 @@ class TranslationMouseEventHandler extends MouseEventHandler {
 
     if (!this.isDragging) return;
 
+
+    const axisVector = this.object3D.transform.worldMatrix.transformVector(new Vector3(0,1,0));
+    // We want a unit vector, i.e. x^2 + y^2 + z^2 = 1
+    axisVector.divideScalar(axisVector.length);
+
+    //Either have a length or return 0
+    const distance = this.deltaWorldPosition?.dotProduct(axisVector) || 0;
     
     const target = this.getTarget();
     if (target && this.axis){
       if (this.axis === 'x') {
-        target.x = target.x+1
+        target.x = target.x+distance;
       }
       else if (this.axis === 'y') {
-        target.y = target.y+1;
+        target.y = target.y+distance;
       } else if (this.axis === 'z') {
-        target.z = target.z+1;
+        target.z = target.z+distance;
       }
     } 
   }
