@@ -4,44 +4,34 @@ import {
   Object3D, CylinderGeometry, MeshRenderer, LitMaterial,
   Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, 
   BoxColliderShape, Vector3, BoxGeometry, TorusGeometry, ComponentBase, 
-  scale, SphereColliderShape, MeshColliderShape,
-  GeometryBase
+  SphereColliderShape, MeshColliderShape, GeometryBase
 } from '@orillusion/core';
-const CYLINDER_LENGTH = 150; // Length of the cylinders
-const SQUARE_LENGTH = CYLINDER_LENGTH; // Length of the square transforms
-const CONE_LENGTH = CYLINDER_LENGTH / 4; // Length of the cones
-const TORUS_LENGTH = CYLINDER_LENGTH/4; // Length of the torus
+
+const CYLINDER_LENGTH = 150;
+const SQUARE_LENGTH = CYLINDER_LENGTH;
+const CONE_LENGTH = CYLINDER_LENGTH / 4;
+const TORUS_LENGTH = CYLINDER_LENGTH / 4;
 
 class Sample {
-  // Initialize the engine and set up the scene, basic camera and lighting
   async run() {
     await Engine3D.init();
 
-    // Create scene
     const scene = new Scene3D();
     scene.exposure = 1.0;
 
-    // Add atmospheric sky
-    const sky = scene.addComponent(AtmosphericComponent);
+    scene.addComponent(AtmosphericComponent);
 
-    // Create camera
     const cameraObj = CameraUtil.createCamera3DObject(scene);
     cameraObj.perspective(60, Engine3D.aspect, 0.1, 1000);
-    //const camCtrl = cameraObj.object3D.addComponent(HoverCameraController);
-    //camCtrl.setCamera(0, 0, 100); // look at origin from z = 100
     cameraObj.transform.localPosition = new Vector3(0, 100, -200);
 
-    // Create View3D
     const view = new View3D();
     view.scene = scene;
     view.camera = cameraObj;
 
-    //Pick and pick type need to be configured before the engine starts
     Engine3D.setting.pick.enable = true;
-    // Bound: ray box picking, pixel: frame buffer picking
-    Engine3D.setting.pick.mode = `bound`; // or 'pixel'
+    Engine3D.setting.pick.mode = `bound`;
 
-    // Add light
     const lightObj = new Object3D();
     const light = lightObj.addComponent(DirectLight);
     light.intensity = 3;
@@ -49,10 +39,7 @@ class Sample {
     lightObj.rotationX = 45;
     lightObj.rotationY = 45;
     scene.addChild(lightObj);
-    sky.relativeTransform = light.transform;
 
-    //const controlsInit = new TransformInit(scene);
-    //controlsInit.init();
     const translationControlAnchor = new Object3D();
     translationControlAnchor.rotationX = -35;
     translationControlAnchor.addComponent(TranslationTransformControl);
@@ -72,13 +59,9 @@ class Sample {
     scaleControlAnchor.rotationY = -50;
     scene.addChild(scaleControlAnchor);
 
-    //Add transform controls, classes and functions later
-
-    // Start render
     Engine3D.startRenderView(view);
   }
 }
-
 
 class TransformControlReference extends ComponentBase {
   reference?: TransformControlBase;
@@ -95,8 +78,6 @@ class TransformControlBase extends ComponentBase {
   }
 
   init(){
-    // this.object3D.addChild(this.transformObject3D);
-    // TODO remove these debug lines
     (window as any).object3D = this.object3D;
     (window as any).transformObject3D = this.transformObject3D;
   }
@@ -111,10 +92,10 @@ class TransformControlBase extends ComponentBase {
     }
     return undefined;
   }
+
   onUpdate() {
     const transformScene = this.getScene(this.transformObject3D);
     const object3DScene = this.getScene(this.object3D);
-    //In the wrong scene
     if (transformScene !== object3DScene) {
       this.transformObject3D.removeFromParent();
       if (object3DScene !== undefined) {
@@ -125,11 +106,10 @@ class TransformControlBase extends ComponentBase {
   }
 
   private setMatrix() {
-    let [position, rotation, scale] = this.object3D.transform.worldMatrix.decompose();
+    let [position, rotation] = this.object3D.transform.worldMatrix.decompose();
     let transform = this.transformObject3D.transform;
     transform.localRotation = rotation;
     transform.localPosition = position;
-    //transform.localScale = scale;
   }
 }
 
@@ -142,22 +122,31 @@ class MouseEventHandler extends ComponentBase {
   public deltaX: number = 0;
   public deltaY: number = 0;
   public deltaWorldPosition?: Vector3;
-  public lastWorldPosition?: Vector3; 
+  public lastWorldPosition?: Vector3;
+
+  // stored from PICK_DOWN
+  public startWorldPosition?: Vector3;
+  public startDistance?: number;
 
   public getTarget(){
-    return this.object3D                       //individual axis
-      .parentObject                            //entire transform control
-      .getComponent(TransformControlReference) //Reference to TransformControlBase
-      ?.reference                              //TransformControlBase object
-      ?.object3D                               //Anchor (The thing we want to transform)
-      ;
+    return this.object3D
+      .parentObject
+      .getComponent(TransformControlReference)
+      ?.reference
+      ?.object3D;
   }
 
   public handlePickDown(event: PointerEvent3D) {
     this.isDragging = true;
     this.lastX = event.mouseX;
     this.lastY = event.mouseY;
-    console.log("Drag started");
+
+    // Store initial values
+    this.startWorldPosition = event.data.worldPos.clone();
+    this.lastWorldPosition = this.startWorldPosition.clone();
+    this.startDistance = event.data.distance;
+
+    console.log("Drag started at:", this.startWorldPosition, "Distance:", this.startDistance);
   }
 
   public handlePickUp() {
@@ -174,20 +163,16 @@ class MouseEventHandler extends ComponentBase {
     }
     this.object3D.getComponentsInChild(MeshRenderer).forEach((renderer: MeshRenderer) => {
       renderer.material.baseColor = this.originalColor.clone();
-      console.log("Not Hovered");
-
     });
   }
 
   public handlePickOver() {
-    console.log(`Hovered object ${this.object3D.name}`);
     this.object3D.getComponentsInChild(MeshRenderer).forEach((renderer: MeshRenderer) => {
       const brighter = renderer.material.baseColor.clone();
       const brightenFactor = 0.3;
       brighter.r = Math.min(brighter.r + brightenFactor, 1);
       brighter.g = Math.min(brighter.g + brightenFactor, 1);
       brighter.b = Math.min(brighter.b + brightenFactor, 1);
-      // Store the original color so we can restore on pick out
       this.originalColor = renderer.material.baseColor.clone();
       renderer.material.baseColor = brighter;
     })
@@ -198,25 +183,15 @@ class MouseEventHandler extends ComponentBase {
 
     this.deltaX = event.mouseX - this.lastX;
     this.deltaY = event.mouseY - this.lastY;
-
     this.lastX = event.mouseX;
     this.lastY = event.mouseY;
 
-    //store the difference between the current 3d world position and the last one (similar to what we do for deltaX and deltaY)
-    
-
-    if (this.lastWorldPosition !== undefined) {
-      //console.log('Setting this.deltaWorldPosition from this.lastWorldPosition:', this.lastWorldPosition);
+    if (this.lastWorldPosition) {
       this.deltaWorldPosition = event.data.worldPos.clone().subtract(this.lastWorldPosition);
     }
-
     this.lastWorldPosition = event.data.worldPos.clone();
-    //console.log(`Dragging... ΔX: ${this.deltaX}, ΔY: ${this.deltaY}`);
-    //console.log(`World Position: ${event.data.worldPos.x}, ${event.data.worldPos.y}, ${event.data.worldPos.z}`);
-    //console.log(`Delta World Position: ${this.deltaWorldPosition}`);
   }
 
-  /** Attach shared drag listeners to any handle mesh */
   init() {
     const target = this.object3D;
     target.addEventListener(PointerEvent3D.PICK_DOWN, (e: PointerEvent3D) => this.handlePickDown(e), target);
@@ -227,18 +202,14 @@ class MouseEventHandler extends ComponentBase {
   }
 }
 
-
 class TranslationMouseEventHandler extends MouseEventHandler {
   handlePickDown(e: PointerEvent3D) {
-    // Call MouseEventHandler.handlePickDown() to handle the shared behavior
     super.handlePickDown(e);
-    
-    
     if (e.ctrlKey) {
       const newShape = new BoxGeometry(
-      Math.floor(Math.random() * 50) + 1,
-      Math.floor(Math.random() * 50) + 1,
-      Math.floor(Math.random() * 50) + 1
+        Math.floor(Math.random() * 50) + 1,
+        Math.floor(Math.random() * 50) + 1,
+        Math.floor(Math.random() * 50) + 1
       );
 
       const shapeObject = new Object3D();
@@ -252,72 +223,51 @@ class TranslationMouseEventHandler extends MouseEventHandler {
       console.log("Arrow Clicked clicked! New shape:", newShape);
       this.object3D.addChild(shapeObject);
     }
-    
   }
 
   handlePickMove(e: PointerEvent3D) {
     super.handlePickMove(e);
-
-    if (!this.isDragging) return;
-
+    if (!this.isDragging || !this.startWorldPosition) return;
 
     const axisVector = this.object3D.transform.worldMatrix.transformVector(new Vector3(0,1,0));
-    // We want a unit vector, i.e. x^2 + y^2 + z^2 = 1
     axisVector.divideScalar(axisVector.length);
 
-    //Either have a length or return 0
-    const distance = this.deltaWorldPosition?.dotProduct(axisVector) || 0;
-    
+    // total distance from PICK_DOWN
+    const totalDragDelta = this.lastWorldPosition?.clone().subtract(this.startWorldPosition) || new Vector3();
+    const distance = totalDragDelta.dotProduct(axisVector);
+
     const target = this.getTarget();
     if (target && this.axis){
-      if (this.axis === 'x') {
-        target.x = target.x+distance;
-      }
-      else if (this.axis === 'y') {
-        target.y = target.y+distance;
-      } else if (this.axis === 'z') {
-        target.z = target.z+distance;
-      }
+      if (this.axis === 'x') target.x += distance;
+      else if (this.axis === 'y') target.y += distance;
+      else if (this.axis === 'z') target.z += distance;
     } 
   }
 }
 
-class RotationMouseEventHandler extends MouseEventHandler {
-  handlePickDown(e: PointerEvent3D) {
-    super.handlePickDown(e);
-  }
-    
-}
-
+class RotationMouseEventHandler extends MouseEventHandler {}
 
 class ScaleMouseEventHandler extends MouseEventHandler {
   handlePickDown(e: PointerEvent3D) {
-    // Call MouseEventHandler.handlePickDown() to handle the shared behavior
     super.handlePickDown(e);
-
     const newColor = new Color(Math.random(), Math.random(), Math.random());
-    console.log("Box clicked! New color:", newColor);
     const boxrenderer = this.object3D.getComponent(MeshRenderer);
     this.originalColor = newColor.clone();
     boxrenderer.material.baseColor = newColor;
   }
   handlePickMove(e: PointerEvent3D) {
     super.handlePickMove(e);
-
     if (!this.isDragging) return;
 
-    
     const target = this.getTarget();
     if (target) {
-      const delta = 0.05; // scaling increment per movement
+      const delta = 0.05;
       target.transform.scaleX += delta;
       target.transform.scaleY += delta;
       target.transform.scaleZ += delta;
     }
-
   }
 }
-  
 
 class TranslationTransformControl extends TransformControlBase {
   constructor() {
@@ -325,13 +275,13 @@ class TranslationTransformControl extends TransformControlBase {
     const coordinateAxes = this.transformObject3D;
 
     const arrowX = this.createArrow(new Color(1, 0, 0), 'x');
-    arrowX.rotationZ = -90; // Rotate to align with X axis
+    arrowX.rotationZ = -90;
     coordinateAxes.addChild(arrowX);
     const arrowY = this.createArrow(new Color (0, 1, 0), 'y');
     coordinateAxes.addChild(arrowY);
     const arrowZ = this.createArrow(new Color (0, 0, 1), 'z');
     coordinateAxes.addChild(arrowZ);
-    arrowZ.rotationX = 90; // Rotate to align with Z axis
+    arrowZ.rotationX = 90;
   }
   createArrow(color: Color, axisName: 'x' | 'y' | 'z') {
     const arrow = new Object3D();
@@ -359,7 +309,6 @@ class TranslationTransformControl extends TransformControlBase {
   createCylinder(color: Color){
     const cylinder = new Object3D();
     const geometry = new CylinderGeometry(10, 10, CYLINDER_LENGTH, 32, 1, false);
-    //geometry.center = true;
     const material = new LitMaterial();
     material.baseColor = color.clone();
     const renderer = cylinder.addComponent(MeshRenderer);
@@ -389,7 +338,6 @@ class TranslationTransformControl extends TransformControlBase {
 }
 
 class RotationTransformControl extends TransformControlBase {
-
   constructor() {
     super();
     const rotationAxes = this.transformObject3D;
@@ -424,7 +372,6 @@ class RotationTransformControl extends TransformControlBase {
 }
 
 class ScaleTransformControl extends TransformControlBase {
-
   constructor() {
     super();
     const scaleAxes = this.transformObject3D;
@@ -443,8 +390,6 @@ class ScaleTransformControl extends TransformControlBase {
     scaleAxes.addChild(boxZ);
   }
 
-
-
   createBox(color: Color, axisName: 'x' | 'y' | 'z'){
     const box = new Object3D();
     const boxgeometry = new BoxGeometry(20, 150,20);
@@ -461,7 +406,6 @@ class ScaleTransformControl extends TransformControlBase {
   
     return box;
   }
-
 }
 
 (async () => {
