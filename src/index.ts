@@ -4,7 +4,8 @@ import {
   Object3D, CylinderGeometry, MeshRenderer, LitMaterial,
   Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, 
   BoxColliderShape, Vector3, BoxGeometry, TorusGeometry, ComponentBase, 
-  SphereColliderShape, MeshColliderShape, GeometryBase
+  SphereColliderShape, MeshColliderShape, GeometryBase,
+  Matrix4
 } from '@orillusion/core';
 
 const CYLINDER_LENGTH = 150;
@@ -23,8 +24,7 @@ class Sample {
 
     const cameraObj = CameraUtil.createCamera3DObject(scene);
     cameraObj.perspective(60, Engine3D.aspect, 0.1, 1000);
-    const camCtrl = cameraObj.object3D.addComponent(HoverCameraController);
-    camCtrl.setCamera(0, 0, 100); // look at origin from z = 100
+    
 
     const view = new View3D();
     view.scene = scene;
@@ -124,6 +124,14 @@ class MouseEventHandler extends ComponentBase {
   public deltaY: number = 0;
   public deltaWorldPosition?: Vector3;
   public lastWorldPosition?: Vector3;
+  public pvMatrix: Matrix4;
+  public pvMatrixInv: Matrix4;
+
+  constructor() {
+    super();
+    this.pvMatrix = new Matrix4();
+    this.pvMatrixInv = new Matrix4();
+  }
 
   // stored from PICK_DOWN
   public startWorldPosition?: Vector3;
@@ -146,8 +154,28 @@ class MouseEventHandler extends ComponentBase {
     this.startWorldPosition = event.data.worldPos.clone();
     this.lastWorldPosition = this.startWorldPosition.clone();
     this.startDistance = event.data.distance;
-
+    const camera = this.getCamera3D();
+    this.pvMatrix = camera.pvMatrix.clone();
+    this.pvMatrixInv = camera.pvMatrixInv.clone();
+    // starting NDC: this.pvMatrix.transformVector(this.startWorldPosition)
+    //  Also get initial NDC coordinates
+    // Matrix Multiplication: Start world Position * PV matrix
     console.log("Drag started at:", this.startWorldPosition, "Distance:", this.startDistance);
+
+    Engine3D.inputSystem.addEventListener(PointerEvent3D.POINTER_MOVE, this.handlePointerMove, this);
+    Engine3D.inputSystem.addEventListener(PointerEvent3D.POINTER_UP, this.handlePointerUp, this);
+  }
+
+  public handlePointerMove(event: PointerEvent3D) {
+    this.deltaX = event.mouseX - this.lastX;
+    this.deltaY = event.mouseY - this.lastY;
+    this.lastX = event.mouseX;
+    this.lastY = event.mouseY;
+  }
+
+  public handlePointerUp(event: PointerEvent3D) {
+    Engine3D.inputSystem.removeEventListener(PointerEvent3D.POINTER_MOVE, this.handlePointerMove, this);
+    Engine3D.inputSystem.removeEventListener(PointerEvent3D.POINTER_UP, this.handlePointerUp, this);
   }
 
   public handlePickUp() {
@@ -200,6 +228,27 @@ class MouseEventHandler extends ComponentBase {
     target.addEventListener(PointerEvent3D.PICK_OUT, () => this.handlePickOut(), target);
     target.addEventListener(PointerEvent3D.PICK_MOVE, (e: PointerEvent3D) => this.handlePickMove(e), target);
     target.addEventListener(PointerEvent3D.PICK_OVER, () => this.handlePickOver(), target);
+  }
+
+  public getScene(object3D: Object3D): Scene3D | undefined {
+    let currentNode = object3D;
+    while (currentNode.transform.parent) {
+      currentNode = currentNode.transform.parent.object3D;
+    }
+    if (currentNode.isScene3D) {
+      return currentNode as Scene3D;
+    }
+    return undefined;
+  }
+
+  public getCamera3D(){
+    const scene = this.getScene(this.object3D);
+    const camera = scene?.view?.camera;
+    if (!camera) {
+      console.warn("No camera found in the scene");
+      throw new Error("No camera found in the scene");
+    }
+    return camera;
   }
 }
 
