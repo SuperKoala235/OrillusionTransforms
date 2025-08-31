@@ -23,7 +23,8 @@ class Sample {
 
     const cameraObj = CameraUtil.createCamera3DObject(scene);
     cameraObj.perspective(60, Engine3D.aspect, 0.1, 1000);
-    cameraObj.transform.localPosition = new Vector3(0, 100, -200);
+    const camCtrl = cameraObj.object3D.addComponent(HoverCameraController);
+    camCtrl.setCamera(0, 0, 100); // look at origin from z = 100
 
     const view = new View3D();
     view.scene = scene;
