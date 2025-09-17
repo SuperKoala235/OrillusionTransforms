@@ -3,7 +3,7 @@ import {
   HoverCameraController, DirectLight, KelvinUtil,
   Object3D, CylinderGeometry, MeshRenderer, LitMaterial,
   Color, ColliderComponent, PointerEvent3D, AtmosphericComponent, 
-  BoxColliderShape, Vector3, BoxGeometry, TorusGeometry, ComponentBase, 
+  BoxColliderShape, Vector3, Vector4, BoxGeometry, TorusGeometry, ComponentBase, 
   SphereColliderShape, MeshColliderShape, GeometryBase,
   Matrix4
 } from '@orillusion/core';
@@ -19,12 +19,12 @@ class Sample {
 
     const scene = new Scene3D();
     scene.exposure = 1.0;
-
     scene.addComponent(AtmosphericComponent);
 
     const cameraObj = CameraUtil.createCamera3DObject(scene);
     cameraObj.perspective(60, Engine3D.aspect, 0.1, 1000);
-    
+    const camCtrl = cameraObj.object3D.addComponent(HoverCameraController);
+    camCtrl.setCamera(0, 0, 100); // look at origin from z = 100
 
     const view = new View3D();
     view.scene = scene;
@@ -126,11 +126,15 @@ class MouseEventHandler extends ComponentBase {
   public lastWorldPosition?: Vector3;
   public pvMatrix: Matrix4;
   public pvMatrixInv: Matrix4;
+  public startClipSpacePosition: Vector4;
+  public w = 1;
+  public z = 0;
 
   constructor() {
     super();
     this.pvMatrix = new Matrix4();
     this.pvMatrixInv = new Matrix4();
+    this.startClipSpacePosition = new Vector4();
   }
 
   // stored from PICK_DOWN
@@ -150,16 +154,15 @@ class MouseEventHandler extends ComponentBase {
     this.lastX = event.mouseX;
     this.lastY = event.mouseY;
 
-    // Store initial values
     this.startWorldPosition = event.data.worldPos.clone();
     this.lastWorldPosition = this.startWorldPosition.clone();
     this.startDistance = event.data.distance;
+
     const camera = this.getCamera3D();
     this.pvMatrix = camera.pvMatrix.clone();
     this.pvMatrixInv = camera.pvMatrixInv.clone();
-    // starting NDC: this.pvMatrix.transformVector(this.startWorldPosition)
-    //  Also get initial NDC coordinates
-    // Matrix Multiplication: Start world Position * PV matrix
+    this.startClipSpacePosition = this.pvMatrix.transformVector4(this.startWorldPosition) as any;
+
     console.log("Drag started at:", this.startWorldPosition, "Distance:", this.startDistance);
 
     Engine3D.inputSystem.addEventListener(PointerEvent3D.POINTER_MOVE, this.handlePointerMove, this);
@@ -207,6 +210,7 @@ class MouseEventHandler extends ComponentBase {
     })
   }
 
+  
   public handlePickMove(event: PointerEvent3D) {
     if (!this.isDragging) return;
 
@@ -214,6 +218,17 @@ class MouseEventHandler extends ComponentBase {
     this.deltaY = event.mouseY - this.lastY;
     this.lastX = event.mouseX;
     this.lastY = event.mouseY;
+
+    // Use Engine3D’s width/height
+    const u = event.mouseX / Engine3D.width;
+    const v = event.mouseY / Engine3D.height;
+
+    const xNDC = 2 * u - 1;
+    const yNDC = -(2 * v - 1);
+
+    this.pvMatrixInv.transformVector4(
+      new Vector4(xNDC * this.w, yNDC * this.w, this.z, this.w) as any
+    );
 
     if (this.lastWorldPosition) {
       this.deltaWorldPosition = event.data.worldPos.clone().subtract(this.lastWorldPosition);
@@ -282,7 +297,6 @@ class TranslationMouseEventHandler extends MouseEventHandler {
     const axisVector = this.object3D.transform.worldMatrix.transformVector(new Vector3(0,1,0));
     axisVector.divideScalar(axisVector.length);
 
-    // total distance from PICK_DOWN
     const totalDragDelta = this.lastWorldPosition?.clone().subtract(this.startWorldPosition) || new Vector3();
     const distance = totalDragDelta.dotProduct(axisVector);
 
