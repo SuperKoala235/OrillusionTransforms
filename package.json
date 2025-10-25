@@ -4,7 +4,11 @@
   "description": "Transform Controls Preview",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc",
+    "dev": "run-p dev:*",
+    "dev:tsc": "tsc -w --preserveWatchOutput",
+    "dev:serve": "browser-sync start --server . --files 'dist/**/*' --no-ui --port 8000"
   },
   "repository": {
     "type": "git",
@@ -17,6 +21,9 @@
   },
   "homepage": "https://github.com/SuperKoala235/OrillusionTransforms#readme",
   "devDependencies": {
+    "browser-sync": "^3.0.4",
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^6.0.1",
     "typescript": "^5.8.3"
   },
   "dependencies": {
